@@ -43,4 +43,10 @@ pnpm dev / pnpm test / pnpm test:watch / pnpm build / pnpm preview
 - Formato interno DualSub JSON v1; SRT/VTT solo import/export.
 
 <!-- SPECKIT START -->
+## Spec activa
+- **001 — Player dual con datos mock**: plan en
+  `specs/001-player-dual-mock/plan.md` (spec, research, data-model, contracts,
+  quickstart). UI nueva en `src/screens/Player/` + store `src/state/playerStore.ts`
+  + mock `src/engines/mock/mockDocument.ts`. Reusa `src/core/sync.ts` sin cambios;
+  sin dependencias nuevas. Siguiente: `/speckit-tasks`.
 <!-- SPECKIT END -->
