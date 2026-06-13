@@ -1,0 +1,4 @@
+# pnpm 11 lee aquí qué dependencias pueden ejecutar build scripts.
+# esbuild solo verifica su binario de plataforma (ya presente); es seguro.
+allowBuilds:
+  esbuild: true
