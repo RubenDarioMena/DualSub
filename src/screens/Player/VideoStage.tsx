@@ -13,6 +13,7 @@ export default function VideoStage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const mediaUrl = usePlayerStore((s) => s.mediaUrl)
   const seekRequestMs = usePlayerStore((s) => s.seekRequestMs)
+  const offsetMs = usePlayerStore((s) => s.offsetMs)
 
   // Reloj maestro: rAF mientras reproduce; una actualización puntual al pausar
   // o tras un seek (para que el highlight responda también en pausa).
@@ -52,6 +53,16 @@ export default function VideoStage() {
       video.removeEventListener('seeked', onSeeked)
     }
   }, [])
+
+  // Recoloca el highlight al instante cuando cambia el offset (también en pausa,
+  // donde el bucle rAF está detenido). Spec US4 (FR-008).
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const { doc, setActiveIndex } = usePlayerStore.getState()
+    const tMs = Math.round(video.currentTime * 1000)
+    setActiveIndex(findActiveSegmentIndex(doc.segments, tMs - offsetMs))
+  }, [offsetMs])
 
   // Consume una petición de seek (R3): coloca el tiempo de video y la limpia.
   // El evento `seeked` recalculará el segmento activo.

@@ -1,1 +1,9 @@
 @import 'tailwindcss';
+
+/* Texto de subtítulo: fallback de fuente para japonés (spec 001, D6). No carga
+   ninguna fuente externa; solo prepara el stack para cuando entren docs JA. */
+.dual-text {
+  font-family:
+    ui-sans-serif, system-ui, 'Noto Sans JP', 'Hiragino Sans',
+    'Yu Gothic', sans-serif;
+}

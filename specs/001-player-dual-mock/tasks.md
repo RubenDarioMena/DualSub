@@ -27,8 +27,8 @@ cierre: `pnpm test` (24/24 de spec 000 siguen verdes) + `pnpm build` + checklist
 
 **Purpose**: estructura mínima y enganche de la pantalla.
 
-- [ ] T001 Crear carpetas de la feature: `src/engines/mock/`, `src/state/`, `src/screens/Player/`
-- [ ] T002 Enganchar `src/App.tsx` para renderizar `<PlayerScreen />` (shell temporal) y retirar el placeholder actual
+- [x] T001 Crear carpetas de la feature: `src/engines/mock/`, `src/state/`, `src/screens/Player/`
+- [x] T002 Enganchar `src/App.tsx` para renderizar `<PlayerScreen />` (shell temporal) y retirar el placeholder actual
 
 ---
 
@@ -39,11 +39,11 @@ store, video como reloj maestro y cálculo del segmento activo.
 
 **⚠️ CRITICAL**: ninguna user story puede empezar hasta completar esta fase.
 
-- [ ] T003 [P] Implementar `src/engines/mock/mockDocument.ts` (`getMockDualSubDocument`, `createMockProject`) cumpliendo `contracts/mock-engine.md` (EN→ES, ≥200 segmentos ordenados sin solape, ≥1 hueco, ≥1 segmento sin traducción, ≥1 con líneas largas; round-trip `parseDualSub` válido)
-- [ ] T004 [P] Implementar `src/state/playerStore.ts` (Zustand) según `contracts/player-store.md`: estado `PlaybackState` + acciones `setMedia`/`setOffset`/`nudgeOffset`/`setPlaying`/`setActiveIndex`/`setViewMode`/`requestSeek`/`clearSeek`; `setMedia` revoca el object URL previo (C3); `requestSeek` clampa a `>= 0` (C2)
-- [ ] T005 Implementar `src/screens/Player/MediaPicker.tsx`: `<input type="file" accept="video/*">` → `URL.createObjectURL` → `setMedia` (FR-001, D7)
-- [ ] T006 Implementar `src/screens/Player/VideoStage.tsx`: dueño del `<video>` (reloj maestro); eventos `play`/`pause` → `setPlaying`; bucle `requestAnimationFrame` mientras reproduce que calcula `findActiveSegmentIndex(doc.segments, Math.round(currentTime*1000) − offsetMs)` y llama `setActiveIndex` **solo al cambiar** (D1, D3, R1, R2, FR-003, FR-011); consume `seekRequestMs` (aplica `video.currentTime = ms/1000`) y llama `clearSeek` (R3); `revokeObjectURL` al desmontar
-- [ ] T007 Implementar `src/screens/Player/PlayerScreen.tsx` (shell): contenedor móvil-first (360px), detección de orientación con `matchMedia('(orientation: landscape)')` → `viewMode` por defecto con override manual (D5, R5, FR-009); monta `MediaPicker` + un único `VideoStage` (no se remonta entre modos) y deja slots para lista/overlay/offset
+- [x] T003 [P] Implementar `src/engines/mock/mockDocument.ts` (`getMockDualSubDocument`, `createMockProject`) cumpliendo `contracts/mock-engine.md` (EN→ES, ≥200 segmentos ordenados sin solape, ≥1 hueco, ≥1 segmento sin traducción, ≥1 con líneas largas; round-trip `parseDualSub` válido)
+- [x] T004 [P] Implementar `src/state/playerStore.ts` (Zustand) según `contracts/player-store.md`: estado `PlaybackState` + acciones `setMedia`/`setOffset`/`nudgeOffset`/`setPlaying`/`setActiveIndex`/`setViewMode`/`requestSeek`/`clearSeek`; `setMedia` revoca el object URL previo (C3); `requestSeek` clampa a `>= 0` (C2)
+- [x] T005 Implementar `src/screens/Player/MediaPicker.tsx`: `<input type="file" accept="video/*">` → `URL.createObjectURL` → `setMedia` (FR-001, D7)
+- [x] T006 Implementar `src/screens/Player/VideoStage.tsx`: dueño del `<video>` (reloj maestro); eventos `play`/`pause` → `setPlaying`; bucle `requestAnimationFrame` mientras reproduce que calcula `findActiveSegmentIndex(doc.segments, Math.round(currentTime*1000) − offsetMs)` y llama `setActiveIndex` **solo al cambiar** (D1, D3, R1, R2, FR-003, FR-011); consume `seekRequestMs` (aplica `video.currentTime = ms/1000`) y llama `clearSeek` (R3); `revokeObjectURL` al desmontar
+- [x] T007 Implementar `src/screens/Player/PlayerScreen.tsx` (shell): contenedor móvil-first (360px), detección de orientación con `matchMedia('(orientation: landscape)')` → `viewMode` por defecto con override manual (D5, R5, FR-009); monta `MediaPicker` + un único `VideoStage` (no se remonta entre modos) y deja slots para lista/overlay/offset
 
 **Checkpoint**: se elige un video, reproduce, y `activeIndex` se calcula en vivo (aún sin UI visible de subtítulos).
 
@@ -58,9 +58,9 @@ ningún resaltado en huecos.
 correcto se resalta en cada instante y que la lista autoscrollea; en un hueco
 ningún diálogo queda resaltado (quickstart, ítems "Vertical — highlight/autoscroll").
 
-- [ ] T008 [P] [US1] Implementar `src/screens/Player/TranscriptRow.tsx`: muestra origen y destino del segmento (solo origen si falta traducción, FR-007); estilo de resaltado cuando es el activo; `forwardRef` para autoscroll (`React.memo` para no re-renderizar filas inactivas, SC-005)
-- [ ] T009 [US1] Implementar `src/screens/Player/TranscriptList.tsx`: renderiza `doc.segments` como `TranscriptRow`; se suscribe a `activeIndex` (no al tiempo, D3); `useEffect` que hace `scrollIntoView({ behavior:'smooth', block:'center' })` sobre la fila activa al cambiar `activeIndex` (D4, FR-004)
-- [ ] T010 [US1] Montar `TranscriptList` en el layout vertical de `PlayerScreen` (video arriba, lista debajo)
+- [x] T008 [P] [US1] Implementar `src/screens/Player/TranscriptRow.tsx`: muestra origen y destino del segmento (solo origen si falta traducción, FR-007); estilo de resaltado cuando es el activo; `forwardRef` para autoscroll (`React.memo` para no re-renderizar filas inactivas, SC-005)
+- [x] T009 [US1] Implementar `src/screens/Player/TranscriptList.tsx`: renderiza `doc.segments` como `TranscriptRow`; se suscribe a `activeIndex` (no al tiempo, D3); `useEffect` que hace `scrollIntoView({ behavior:'smooth', block:'center' })` sobre la fila activa al cambiar `activeIndex` (D4, FR-004)
+- [x] T010 [US1] Montar `TranscriptList` en el layout vertical de `PlayerScreen` (video arriba, lista debajo)
 
 **Checkpoint**: MVP demostrable en el teléfono — se ve DualSub vivo (highlight + autoscroll). US1 entregable de forma independiente.
 
@@ -74,7 +74,7 @@ y lo resalta.
 **Independent Test**: tocar un diálogo y verificar que el video salta a su inicio
 (±100 ms) y queda resaltado (quickstart, ítem "Tap-to-seek"; SC-002).
 
-- [ ] T011 [US2] Añadir handler de toque en `TranscriptRow`/`TranscriptList` que llama `requestSeek(Math.max(0, segment.startMs + offsetMs))` (R3, FR-005); el seek ya lo aplica `VideoStage` (T006), de modo que tras el salto el rAF recalcula y el diálogo tocado queda activo (US2 escenario 2: coherencia highlight↔seek)
+- [x] T011 [US2] Añadir handler de toque en `TranscriptRow`/`TranscriptList` que llama `requestSeek(Math.max(0, segment.startMs + offsetMs))` (R3, FR-005); el seek ya lo aplica `VideoStage` (T006), de modo que tras el salto el rAF recalcula y el diálogo tocado queda activo (US2 escenario 2: coherencia highlight↔seek)
 
 **Checkpoint**: US1 + US2 funcionan; la lista pasa de pasiva a interactiva (repetir frases).
 
@@ -89,8 +89,8 @@ video, legibles y respetando safe-areas; vacío en huecos.
 segmento activo; en hueco el overlay desaparece; segmento sin traducción muestra
 solo origen (quickstart, ítems "Overlay" y "Segmento sin traducción"; US3).
 
-- [ ] T012 [P] [US3] Implementar `src/screens/Player/SubtitleOverlay.tsx`: lee `activeIndex`+`doc`; muestra origen y destino en dos líneas diferenciadas con halo/sombra para contraste; respeta `env(safe-area-inset-*)` y deja padding inferior para no chocar con los controles nativos (D6, FR-006); no renderiza nada si `activeIndex === -1`; solo origen si falta traducción (FR-007)
-- [ ] T013 [US3] Layout overlay en `PlayerScreen`: en `viewMode === 'overlay'` posiciona `SubtitleOverlay` encima del mismo `VideoStage` (sin remontarlo, FR-009); botón para alternar modo manualmente (D5)
+- [x] T012 [P] [US3] Implementar `src/screens/Player/SubtitleOverlay.tsx`: lee `activeIndex`+`doc`; muestra origen y destino en dos líneas diferenciadas con halo/sombra para contraste; respeta `env(safe-area-inset-*)` y deja padding inferior para no chocar con los controles nativos (D6, FR-006); no renderiza nada si `activeIndex === -1`; solo origen si falta traducción (FR-007)
+- [x] T013 [US3] Layout overlay en `PlayerScreen`: en `viewMode === 'overlay'` posiciona `SubtitleOverlay` encima del mismo `VideoStage` (sin remontarlo, FR-009); botón para alternar modo manualmente (D5)
 
 **Checkpoint**: mitad "ver" de la propuesta dual completa; US1–US3 independientes.
 
@@ -104,8 +104,8 @@ solo origen (quickstart, ítems "Overlay" y "Segmento sin traducción"; US3).
 para un mismo instante; volver a 0 restaura el estado; el documento no cambia
 (quickstart, ítem "Offset ±"; SC-003, FR-008).
 
-- [ ] T014 [P] [US4] Implementar `src/screens/Player/OffsetControl.tsx`: muestra `offsetMs`; botones `−500/−100/+100/+500` (→ `nudgeOffset`) y reset a 0 (→ `setOffset(0)`); no toca `doc` (C1, R4)
-- [ ] T015 [US4] Montar `OffsetControl` en `PlayerScreen` (visible en ambos modos); verificar que el cambio de offset reubica highlight (T006) y overlay (T012) sin lag perceptible
+- [x] T014 [P] [US4] Implementar `src/screens/Player/OffsetControl.tsx`: muestra `offsetMs`; botones `−500/−100/+100/+500` (→ `nudgeOffset`) y reset a 0 (→ `setOffset(0)`); no toca `doc` (C1, R4)
+- [x] T015 [US4] Montar `OffsetControl` en `PlayerScreen` (visible en ambos modos); verificar que el cambio de offset reubica highlight (T006) y overlay (T012) sin lag perceptible
 
 **Checkpoint**: las 4 user stories funcionan; experiencia completa de estudio.
 
@@ -115,9 +115,9 @@ para un mismo instante; volver a 0 restaura el estado; el documento no cambia
 
 **Purpose**: pulido transversal y evidencia de cierre.
 
-- [ ] T016 Pasada de estilo móvil-first a 360px y legibilidad a distancia de brazo (FR-010, SC-004); texto preparado para JA futuro con `word-break`/`overflow-wrap` y `font-family` con fallback `Noto Sans JP` (D6), sin cargar fuentes nuevas
-- [ ] T017 [P] Actualizar `docs/PROGRESS.md` (mover 001 a Hecho con resumen) y, si surgió alguna decisión (p. ej. virtualización), añadir 1 línea a `docs/DECISIONS.md`
-- [ ] T018 Ejecutar la checklist de dispositivo de `quickstart.md` en un teléfono real y pegar evidencia: `pnpm test` + `pnpm build` en verde (principio III)
+- [x] T016 Pasada de estilo móvil-first a 360px y legibilidad a distancia de brazo (FR-010, SC-004); texto preparado para JA futuro con `word-break`/`overflow-wrap` y `font-family` con fallback `Noto Sans JP` (D6), sin cargar fuentes nuevas
+- [x] T017 [P] Actualizar `docs/PROGRESS.md` (mover 001 a Hecho con resumen) y, si surgió alguna decisión (p. ej. virtualización), añadir 1 línea a `docs/DECISIONS.md`
+- [x] T018 Ejecutar la checklist de dispositivo de `quickstart.md` en un teléfono real y pegar evidencia: `pnpm test` + `pnpm build` en verde (principio III)
 
 ---
 
