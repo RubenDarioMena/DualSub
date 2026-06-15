@@ -79,7 +79,7 @@ export default function VideoStage() {
       src={mediaUrl ?? undefined}
       controls
       playsInline
-      className="h-full w-full bg-black"
+      className="h-full w-full bg-black object-contain"
     />
   )
 }

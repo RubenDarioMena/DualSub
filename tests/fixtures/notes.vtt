@@ -1,0 +1,14 @@
+WEBVTT
+
+NOTE This is a comment block
+that spans two lines.
+
+STYLE
+::cue { color: yellow }
+
+intro
+00:00:01.000 --> 00:00:03.000
+<c.yellow>Styled</c> text.
+
+00:00:04.000 --> 00:00:06.000 line:90% position:50%
+Positioned cue.

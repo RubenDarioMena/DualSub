@@ -9,10 +9,15 @@ import { getMockDualSubDocument } from '../engines/mock/mockDocument'
 
 export type ViewMode = 'list' | 'overlay'
 
+/** Pantalla activa de la app (sin router; spec 002 D10). */
+export type Screen = 'import' | 'player'
+
 interface PlayerState {
+  /** Pantalla activa: arranca en Import hasta que un import válido abre el Player. */
+  screen: Screen
   /** Object URL del video local; `null` antes de elegir. */
   mediaUrl: string | null
-  /** Documento dual mock (EN→ES); inmutable en runtime. */
+  /** Documento dual activo (mock al inicio; reemplazado por `loadProject`). */
   doc: DualSubDocument
   /** Desfase de sincronización en ms (±). No muta `doc`. */
   offsetMs: number
@@ -23,6 +28,8 @@ interface PlayerState {
   /** Petición de seek pendiente (ms de video) que `VideoStage` aplica y limpia. */
   seekRequestMs: number | null
 
+  /** Carga un proyecto importado (spec 002) y abre el Player. */
+  loadProject: (p: { doc: DualSubDocument; mediaUrl: string }) => void
   setMedia: (url: string | null) => void
   setOffset: (ms: number) => void
   nudgeOffset: (deltaMs: number) => void
@@ -34,6 +41,7 @@ interface PlayerState {
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
+  screen: 'import',
   mediaUrl: null,
   doc: getMockDualSubDocument(),
   offsetMs: 0,
@@ -42,6 +50,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   viewMode: 'list',
   seekRequestMs: null,
 
+  // Reemplaza el documento y el video por los del import y abre el Player.
+  loadProject: ({ doc, mediaUrl }) => {
+    const prev = get().mediaUrl
+    if (prev && prev !== mediaUrl) URL.revokeObjectURL(prev)
+    set({
+      doc,
+      mediaUrl,
+      screen: 'player',
+      offsetMs: 0,
+      activeIndex: -1,
+      isPlaying: false,
+    })
+  },
   // C3: revoca el object URL previo exactamente una vez al reemplazarlo.
   setMedia: (url) => {
     const prev = get().mediaUrl

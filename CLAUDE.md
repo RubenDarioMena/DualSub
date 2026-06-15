@@ -29,6 +29,10 @@ Deploy estático (Netlify). Sin backend en v0.1.
 6. Móvil-first: diseñar a 360px primero.
 7. API keys SOLO en localStorage (BYOK). Nunca en el repo.
 8. Spec ambigua ⇒ preguntar UNA cosa concreta, no asumir.
+9. Explicar decisiones en lenguaje accesible: al pedir una decisión (sobre todo
+   en audio/codecs/red), traducir el término técnico a su efecto práctico
+   (qué cambia para el usuario, coste, complejidad). Vale gastar tokens en esa
+   claridad: acelera decidir. Sin jerga cruda sin explicar.
 
 ## Comandos
 pnpm dev / pnpm test / pnpm test:watch / pnpm build / pnpm preview
@@ -44,9 +48,14 @@ pnpm dev / pnpm test / pnpm test:watch / pnpm build / pnpm preview
 
 <!-- SPECKIT START -->
 ## Spec activa
-- **001 — Player dual con datos mock**: plan en
-  `specs/001-player-dual-mock/plan.md` (spec, research, data-model, contracts,
-  quickstart). UI nueva en `src/screens/Player/` + store `src/state/playerStore.ts`
-  + mock `src/engines/mock/mockDocument.ts`. Reusa `src/core/sync.ts` sin cambios;
-  sin dependencias nuevas. Siguiente: `/speckit-tasks`.
+- **003 — Traducción vía API (BYOK)**: plan en
+  `specs/003-translate-api-byok/plan.md` (spec, research, data-model, contracts,
+  quickstart). Interfaz `Translator` + batching/validación 1:1 + ensamblado en
+  `src/core/services` y `src/core/translation/` (puro, tests en `tests/core/`);
+  `fetch` SOLO en `src/engines/api/` (adaptador base LLM + Groq; resto stubs).
+  `engines/mock/mockTranslator.ts` (proveedor "demo"). Settings BYOK
+  (`src/state/settingsStore.ts` + `src/screens/Settings/`) con clave por proveedor
+  en localStorage. Acción Traducir en el Player (progreso/errores) → `loadProject`.
+  Sin dependencias nuevas (fetch nativo). Reusa 000/001/002. Siguiente:
+  `/speckit-tasks`.
 <!-- SPECKIT END -->

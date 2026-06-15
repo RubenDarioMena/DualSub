@@ -170,7 +170,9 @@ parsing y la visualización funcionen.
   `startMs`, descartar cues inválidos `endMs<=startMs`, resolver solapes/duplicados)
   de modo que el `DualSubDocument` resultante cumpla las invariantes de spec 000.
 - **FR-006**: Con **un** sidecar, el sistema MUST construir un `DualSubDocument` con
-  el idioma de esa pista como origen y sin destino (destino pendiente).
+  el idioma de esa pista como origen y sin texto destino. El usuario MAY elegir el
+  idioma destino (para una traducción futura, spec 003) o **"Ninguno"**; en ambos
+  casos el Player muestra solo-origen (destino pendiente).
 - **FR-007**: Con **dos** sidecars de idiomas distintos, el sistema MUST producir un
   `DualSubDocument` dual con la pista origen como master de timing y el texto destino
   alineado por **solape** (mayor solape; concatenar si varios; vacío si ninguno).

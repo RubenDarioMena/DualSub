@@ -44,6 +44,18 @@ Todo componente se diseña primero para 360px de ancho. Las API keys viven SOLO
 en localStorage vía la pantalla Settings (BYOK): jamás hardcodeadas, jamás en el
 repo, jamás en variables de build.
 
+### VII. Decisiones explicadas en lenguaje accesible
+Cuando se pida al usuario una decisión (especialmente en temas de audio, códecs,
+formatos contenedores o red), NO se asume lenguaje técnico crudo. Cada término
+técnico se traduce a su **efecto práctico**: qué cambia para el usuario, qué cuesta
+(tiempo/dinero/batería) y cuánta complejidad añade. Está permitido —y es deseable—
+gastar tokens extra en esa claridad, porque acelera la toma de decisiones (que es
+el cuello de botella, no los tokens). El detalle técnico puede acompañar, pero
+siempre después de la explicación en términos llanos. Aplica a opciones de
+`AskUserQuestion`, comparativas y recomendaciones. Por defecto se explica en llano
+y se **marca con 📎** dónde hay profundidad técnica omitida, para que el usuario
+tire del hilo bajo demanda (sin cambiar de modelo ni pasos manuales).
+
 ## Convenciones técnicas
 
 - Stack: React 19 + Vite + TypeScript estricto + Tailwind + Zustand + Vitest.
@@ -80,4 +92,8 @@ implementación que la contradiga debe corregirse o justificar la excepción en
 ambigua, se pregunta UNA cosa concreta, no se asume en silencio una decisión de
 producto (idiomas, costos, UX).
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-12 | **Last Amended**: 2026-06-12
+**Version**: 1.1.0 | **Ratified**: 2026-06-12 | **Last Amended**: 2026-06-13
+
+Enmiendas:
+- **1.1.0 (2026-06-13)**: añadido el principio VII (decisiones explicadas en
+  lenguaje accesible).
