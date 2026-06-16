@@ -9,8 +9,8 @@ import { getMockDualSubDocument } from '../engines/mock/mockDocument'
 
 export type ViewMode = 'list' | 'overlay'
 
-/** Pantalla activa de la app (sin router; spec 002 D10). */
-export type Screen = 'import' | 'player'
+/** Pantalla activa de la app (sin router; spec 002 D10, spec 003 D9). */
+export type Screen = 'import' | 'player' | 'settings'
 
 interface PlayerState {
   /** Pantalla activa: arranca en Import hasta que un import válido abre el Player. */
@@ -28,8 +28,13 @@ interface PlayerState {
   /** Petición de seek pendiente (ms de video) que `VideoStage` aplica y limpia. */
   seekRequestMs: number | null
 
-  /** Carga un proyecto importado (spec 002) y abre el Player. */
-  loadProject: (p: { doc: DualSubDocument; mediaUrl: string }) => void
+  /**
+   * Carga un proyecto importado (spec 002) y abre el Player. También lo reusa la
+   * traducción (003) pasando el `mediaUrl` actual para conservar el video.
+   */
+  loadProject: (p: { doc: DualSubDocument; mediaUrl: string | null }) => void
+  /** Cambia la pantalla activa (navegación sin router; spec 003 D9). */
+  setScreen: (s: Screen) => void
   setMedia: (url: string | null) => void
   setOffset: (ms: number) => void
   nudgeOffset: (deltaMs: number) => void
@@ -63,6 +68,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       isPlaying: false,
     })
   },
+  setScreen: (s) => set({ screen: s }),
   // C3: revoca el object URL previo exactamente una vez al reemplazarlo.
   setMedia: (url) => {
     const prev = get().mediaUrl

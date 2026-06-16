@@ -2,6 +2,24 @@
 
 > Log de decisiones. Una línea por decisión, con fecha. Lo más reciente arriba.
 
+- **2026-06-15** — Conectados los 7 proveedores reales (antes solo Groq + stubs):
+  **LLM** — OpenAI y DeepSeek reusan el `llmAdapter` estilo OpenAI tal cual; **Anthropic**
+  (Messages API: `system` aparte, `max_tokens`, `content[].text`) y **Gemini**
+  (`generateContent`, clave en la URL) aportan `buildBody`/`extractContent` propios sobre
+  el mismo adaptador (D7). **MT** — Google Translate y DeepL sobre un `mtAdapter` nuevo
+  (reciben array y devuelven 1:1 nativo, sin prompt; validación de longitud 1:1). Modelos
+  baratos por defecto (gpt-4o-mini, claude-haiku-4-5, gemini-2.0-flash, deepseek-chat).
+  **CORS**: como la app es solo-navegador (sin backend), cada API debe permitir llamadas
+  directas — Anthropic lo habilita con `anthropic-dangerous-direct-browser-access`;
+  **DeepL NO envía CORS**, así que en la web v0.1 fallará con error de red hasta que haya
+  un proxy (queda implementado y anotado). Sin dependencias nuevas.
+- **2026-06-14** — Spec 003 implementada (traducción BYOK). Protocolo de lote =
+  **array JSON** (no conteo de líneas): robusto con subtítulos multilínea; `decodeBatch`
+  valida `length` 1:1 (D2). Proveedor MVP real = **Groq** (familia LLM, API compatible
+  OpenAI chat-completions) sobre un `llmAdapter` base reutilizable (D7); resto del
+  catálogo son stubs incrementales. Clave **por proveedor** solo en `localStorage`
+  (escritura explícita, sin middleware; D6). `fetch` solo en `src/engines/api`. Sin
+  dependencias nuevas (fetch nativo).
 - **2026-06-13** — Constitución v1.1.0: nuevo principio VII — explicar las
   decisiones en lenguaje accesible (traducir jerga de audio/codecs/red a efecto
   práctico para el usuario, coste y complejidad), aun a costa de más tokens.

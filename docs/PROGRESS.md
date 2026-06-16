@@ -32,12 +32,53 @@
   **54/54 tests verdes, build OK** (tsc estricto). Sin dependencias nuevas. Spec en
   `specs/002-import-sidecar-subs/`.
 
+- **2026-06-14** — **Spec 003 — Traducción vía API (BYOK)**: rellenar el idioma
+  destino de un `DualSubDocument` (salida del Import 002) vía API externa con clave del
+  usuario. Core puro nuevo: interfaz `Translator` + tipos + catálogo `PROVIDERS`
+  (`src/core/services/translator.ts`); `planBatches`/`encodeBatch`/`decodeBatch`
+  (array JSON, validación 1:1, `src/core/translation/batch.ts`) y `assembleTranslated`
+  (ensamblado inmutable 1:1, timing intacto, `src/core/translation/assemble.ts`).
+  Engines: `mockTranslator` (demo sin clave) + `llmAdapter` base + `groq` (proveedor MVP
+  real) + registry `getTranslator` (resto stubs `provider-unavailable`); `fetch` SOLO en
+  `src/engines/api/`. Settings BYOK (`settingsStore` con clave por proveedor en
+  localStorage + `SettingsScreen`), navegación `screen:'settings'` sin router, y
+  `TranslatePanel` en el Player (progreso por lote + errores accionables por `kind` +
+  reintento de lo pendiente, FR-008). Sin dependencias nuevas. **71/71 tests verdes,
+  build OK** (tsc estricto). Spec en `specs/003-translate-api-byok/`.
+
 ## En curso
 - (nada)
 
+## Hecho (cont.)
+- **2026-06-15** — **003 — resto de proveedores API conectados** (antes solo Groq +
+  stubs). LLM: `openai`/`deepseek` (config sobre `llmAdapter` estilo OpenAI),
+  `anthropic` (Messages API) y `gemini` (`generateContent`, clave en URL) con
+  `buildBody`/`extractContent` propios. MT nuevo `mtAdapter` + `google` (Translate v2) y
+  `deepl` (array 1:1 nativo). Catálogo `PROVIDERS` todo `implemented:true`. **71/71 tests
+  + build OK**. Validado en navegador (preview): pipeline mock US1 1:1/timing-intacto/
+  origen-no-mutado, guard `no-key` en los 6 proveedores nuevos (sin red), Settings a
+  360px (input clave, persistencia por proveedor sin pisar). Seguridad (D): clave solo en
+  localStorage, cero `console.*`, nunca en bundle. **Pendiente**: DeepL no funciona desde
+  el navegador (sin CORS) hasta que haya proxy; probar Groq/OpenAI/Anthropic/Gemini con
+  clave real en teléfono (US1+US2+US3).
+
+- **2026-06-15** — **003 bugfix (clave con espacios)**: un **espacio inicial** en la
+  API key (típico al pegar en el móvil) rompía el header `Authorization` y el proveedor
+  devolvía 401 → mensaje "clave inválida". Diagnosticado con la API real de DeepSeek
+  (la clave era válida; con espacio inicial daba 401, sin él 200). Fix: `.trim()` a la
+  clave antes de enviar en `llmAdapter` y `mtAdapter` (un solo punto, cubre los 7). 71/71
+  + build OK.
+
 ## Siguiente
-- **Spec 003 — Pipeline API (BYOK)**: audio → ASR con timestamps → traducción 1:1 →
-  DualSub JSON. Reusa el `targetLang` que el usuario ya pudo elegir en Import (002, D7).
+- **Validación 003 en teléfono** (quickstart.md): US2 persistencia de clave (recargar,
+  cambiar proveedor sin pisar, borrar); US1 "Mock (demo)" → dual instantáneo; US1+US2
+  proveedor real (Groq/OpenAI/Anthropic/Gemini) + clave real → traducción real 1:1; US3
+  sin clave/clave inválida/red → mensaje accionable sin colgarse; Settings y panel usables
+  a 360px. **Nota CORS**: DeepL fallará desde el navegador (sin proxy).
+- **Spec 004 — Pipeline ASR (audio → texto con timestamps)**: extracción de audio +
+  transcripción (Whisper u otro) para cubrir el caso "no tengo ningún subtítulo".
+  Reusa la interfaz de engines y el formato DualSub. (Antes era el resto de la 003;
+  se acotó la 003 a solo traducción.)
 - **002 — validación en teléfono (ronda 1, 2026-06-13)**: US1/US2/US3 y errores
   mayormente OK. Bugs corregidos: selección de archivos poco fiable / "aparece y
   desaparece" (reset de `value` del input), archivo incompatible borraba lo ya

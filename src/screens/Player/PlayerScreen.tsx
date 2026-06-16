@@ -13,12 +13,14 @@ import VideoStage from './VideoStage'
 import SubtitleOverlay from './SubtitleOverlay'
 import TranscriptList from './TranscriptList'
 import OffsetControl from './OffsetControl'
+import TranslatePanel from './TranslatePanel'
 
 export default function PlayerScreen() {
   const mediaUrl = usePlayerStore((s) => s.mediaUrl)
   const doc = usePlayerStore((s) => s.doc)
   const viewMode = usePlayerStore((s) => s.viewMode)
   const setViewMode = usePlayerStore((s) => s.setViewMode)
+  const setScreen = usePlayerStore((s) => s.setScreen)
 
   // El modo por defecto sigue la orientación; el override manual gana hasta el
   // próximo cambio de orientación (el listener solo dispara entonces).
@@ -45,6 +47,14 @@ export default function PlayerScreen() {
             </span>
           </h1>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setScreen('settings')}
+              aria-label="Settings"
+              className="rounded-full border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-200 active:bg-neutral-800"
+            >
+              ⚙
+            </button>
             <ModeToggle overlay={overlay} onToggle={() => setViewMode('overlay')} />
             <MediaPicker />
           </div>
@@ -84,6 +94,9 @@ export default function PlayerScreen() {
       <div className={overlay ? 'hidden' : 'flex min-h-0 flex-1 flex-col'}>
         <div className="shrink-0 border-b border-neutral-800 px-2 py-2">
           <OffsetControl />
+        </div>
+        <div className="shrink-0 px-2 pt-2">
+          <TranslatePanel />
         </div>
         <TranscriptList />
       </div>
