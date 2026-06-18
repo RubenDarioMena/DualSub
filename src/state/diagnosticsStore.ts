@@ -1,5 +1,5 @@
 /**
- * Log de diagnóstico in-app. Captura errores y eventos clave para poder verlos y
+ * [diag] Log de diagnóstico in-app. Captura errores y eventos clave para poder verlos y
  * copiarlos DESDE EL MÓVIL (no hay consola accesible en el teléfono). Se persiste en
  * `localStorage` (capado) para que sobreviva al propio reinicio de la pestaña: si tras
  * apagar la pantalla aparecen dos "app iniciada" seguidas, ahí está el descarte del SO.

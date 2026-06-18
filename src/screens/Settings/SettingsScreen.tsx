@@ -43,6 +43,14 @@ export default function SettingsScreen() {
           ← Volver
         </button>
         <h1 className="text-sm font-semibold tracking-tight">Settings · Traducción</h1>
+        {/* [diag] acceso al modo diagnóstico */}
+        <button
+          type="button"
+          onClick={() => setScreen('diagnostics')}
+          className="ml-auto rounded-full border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300 active:bg-neutral-800"
+        >
+          Diagnóstico
+        </button>
       </header>
 
       <div className="flex flex-col gap-6 px-4 py-5">

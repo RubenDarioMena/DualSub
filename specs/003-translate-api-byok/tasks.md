@@ -131,7 +131,7 @@ documento de N segmentos verificar el indicador de progreso por lotes.
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [X] T022 [P] Actualizar `docs/PROGRESS.md` (mover 003 a "Hecho" con resumen) y añadir línea en `docs/DECISIONS.md` (protocolo array JSON, proveedor MVP Groq, BYOK localStorage)
-- [ ] T023 Cierre: pegar salida real de `pnpm test` + `pnpm build` verdes y correr la checklist de dispositivo de `quickstart.md` (US2 persistencia, US1 mock instantáneo, US1+US2 Groq real, US3 errores) a 360px
+- [X] T023 Cierre: `pnpm test` (76/76) + `pnpm build` verdes (en `docs/PROGRESS.md`). Checklist de dispositivo (quickstart) PASA en teléfono: US1 mock instantáneo; US2 persistencia de clave + traducción real con DeepSeek 1:1 (incl. documento de 158 segs); US3 errores accionables (sin clave / clave inválida / corte de red → reintento solo de lo pendiente, validado en vivo). Bugs encontrados y corregidos: clave con espacio inicial (`.trim()`) y fusión de líneas en japonés (auto-bisección). Seguridad (SC-004) verificada por inspección. UX móvil usable a 360px (mejorable, es prototipo).
 
 ---
 

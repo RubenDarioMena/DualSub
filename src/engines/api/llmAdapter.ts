@@ -13,6 +13,7 @@ import {
   type TranslationProgress,
 } from '../../core/services/translator'
 import { planBatches, encodeBatch, decodeBatch } from '../../core/translation/batch'
+import { translateWithBisect } from '../../core/translation/bisect'
 
 /**
  * Configuración de un proveedor de familia LLM. Por defecto asume el formato
@@ -64,8 +65,11 @@ function systemPrompt(source: LangCode, target: LangCode): string {
   return (
     `Eres un traductor profesional de subtítulos. Recibirás un array JSON de strings ` +
     `en ${LANG_NAMES[source]}. Traduce cada elemento al ${LANG_NAMES[target]}. ` +
-    `Devuelve SOLO un array JSON de strings con la MISMA longitud y el MISMO orden, ` +
-    `sin numeración, sin comentarios ni texto adicional. Conserva los saltos de línea.`
+    `Devuelve SOLO un array JSON de strings con EXACTAMENTE la misma cantidad de ` +
+    `elementos y el MISMO orden: traduce cada entrada por separado, una por una. ` +
+    `NUNCA combines dos entradas en una ni dividas una entrada en varias, aunque en ` +
+    `${LANG_NAMES[target]} parezca más natural unirlas; mantén la correspondencia 1:1. ` +
+    `Sin numeración, sin comentarios ni texto adicional. Conserva los saltos de línea.`
   )
 }
 
@@ -88,8 +92,12 @@ export function createLlmTranslator(config: LlmConfig): Translator {
 
       for (const batch of batches) {
         try {
-          const content = await callChat(config, req, batch.texts)
-          const translated = decodeBatch(content, batch.texts.length) // valida 1:1 (bad-shape)
+          // Auto-bisección: si el LLM fusiona/divide líneas (bad-shape), reintenta en
+          // mitades hasta lograr 1:1 (típico en japonés). Solo afecta al lote fallido.
+          const translated = await translateWithBisect(batch.texts, async (sub) => {
+            const content = await callChat(config, req, sub)
+            return decodeBatch(content, sub.length) // valida 1:1 (bad-shape)
+          })
           batch.indices.forEach((origIndex, i) => {
             result[origIndex] = translated[i]
           })
@@ -154,7 +162,11 @@ async function callChat(
   const extract = config.extractContent ?? openAiContent
   const content = extract(data)
   if (typeof content !== 'string') {
-    throw new TranslationError('bad-shape', 'La respuesta no trae contenido de texto.')
+    throw new TranslationError(
+      'bad-shape',
+      'La respuesta no trae contenido de texto.',
+      JSON.stringify(data)?.slice(0, 2000), // [diag] contexto crudo para diagnóstico
+    )
   }
   return content
 }

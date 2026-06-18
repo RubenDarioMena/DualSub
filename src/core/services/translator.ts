@@ -94,10 +94,16 @@ export class TranslationError extends Error {
    * ya traducido y reintentar solo lo pendiente. La UI la fusiona y reintenta.
    */
   partial?: (string | undefined)[]
-  constructor(kind: TranslationErrorKind, message?: string) {
+  /**
+   * [diag] Contexto crudo para diagnóstico (p.ej. la respuesta del proveedor que no se
+   * pudo parsear). No se muestra en el mensaje al usuario; va al log de diagnóstico.
+   */
+  detail?: string
+  constructor(kind: TranslationErrorKind, message?: string, detail?: string) {
     super(message ?? kind)
     this.name = 'TranslationError'
     this.kind = kind
+    this.detail = detail
   }
 }
 

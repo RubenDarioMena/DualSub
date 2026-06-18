@@ -2,6 +2,18 @@
 
 > Log de decisiones. Una línea por decisión, con fecha. Lo más reciente arriba.
 
+- **2026-06-15** — **Auto-bisección 1:1** ante `bad-shape` por fusión de líneas del LLM
+  (diagnosticado con log real: japonés devolvía 39/40 porque el modelo une cláusulas).
+  Helper puro `translateWithBisect` (core, testeado) parte el lote en mitades y reintenta
+  hasta lograr 1:1 o llegar a 1 línea; solo reintenta `bad-shape` (auth/red se propagan).
+  Prompt reforzado ("EXACTAMENTE N, sin combinar ni dividir"). Solo en `llmAdapter` (la
+  familia MT ya devuelve 1:1 nativo).
+- **2026-06-15** — **Modo diagnóstico in-app** (el usuario no puede pasar logs del móvil):
+  log capado + persistido en localStorage (sobrevive al descarte de pestaña), captura de
+  errores globales/console + payload crudo de fallos de traducción, pantalla copiable.
+  Convención: la instrumentación de logging incrustada en código de producto se marca con
+  la etiqueta **`[diag]`** (grep para encontrarla y optimizarla/quitarla); los archivos
+  del feature también la llevan en su cabecera.
 - **2026-06-15** — Conectados los 7 proveedores reales (antes solo Groq + stubs):
   **LLM** — OpenAI y DeepSeek reusan el `llmAdapter` estilo OpenAI tal cual; **Anthropic**
   (Messages API: `system` aparte, `max_tokens`, `content[].text`) y **Gemini**

@@ -15,6 +15,7 @@ import {
 } from '../../core/services/translator'
 import { getTranslator } from '../../engines/api'
 import { assembleTranslated } from '../../core/translation/assemble'
+import { diag } from '../../state/diagnosticsStore'
 
 type Status = 'idle' | 'running' | 'error'
 
@@ -58,6 +59,9 @@ export default function TranslatePanel() {
     const acc = accRef.current
     // Solo se envía lo pendiente: los índices ya traducidos van como '' (planBatches los omite).
     const pending = sourceTexts.map((t, i) => (acc[i] !== undefined ? '' : t))
+    // [diag] miga de contexto del intento de traducción
+    const pendingCount = pending.filter((t) => t.trim() !== '').length
+    diag('info', `Traducir: ${provider} ${doc.sourceLang}→${doc.targetLang} · ${pendingCount} pendientes`)
 
     try {
       const translator = getTranslator(provider)
@@ -74,12 +78,16 @@ export default function TranslatePanel() {
       const dual = assembleTranslated(doc, doc.targetLang, acc)
       loadProject({ doc: dual, mediaUrl })
       setStatus('idle')
+      diag('info', `Traducción OK (${provider} ${doc.sourceLang}→${doc.targetLang})`) // [diag]
     } catch (e) {
       if (e instanceof TranslationError) {
         if (e.partial) mergeInto(acc, e.partial)
         setError({ kind: e.kind, message: e.message })
+        // [diag] el `detail` lleva el payload crudo (clave para diagnosticar p.ej. japonés).
+        diag('error', `Traducción ${e.kind} (${provider} ${doc.sourceLang}→${doc.targetLang}): ${e.message}`, e.detail)
       } else {
         setError({ kind: 'network', message: 'Error inesperado durante la traducción.' })
+        diag('error', `Traducción: error inesperado (${provider})`, e instanceof Error ? e.stack : String(e)) // [diag]
       }
       setStatus('error')
     }

@@ -10,7 +10,7 @@ import { getMockDualSubDocument } from '../engines/mock/mockDocument'
 export type ViewMode = 'list' | 'overlay'
 
 /** Pantalla activa de la app (sin router; spec 002 D10, spec 003 D9). */
-export type Screen = 'import' | 'player' | 'settings'
+export type Screen = 'import' | 'player' | 'settings' | 'diagnostics'
 
 interface PlayerState {
   /** Pantalla activa: arranca en Import hasta que un import válido abre el Player. */

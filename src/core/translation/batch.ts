@@ -68,12 +68,17 @@ export function encodeBatch(texts: string[]): string {
 export function decodeBatch(raw: string, expected: number): string[] {
   const arr = extractJsonArray(raw)
   if (arr === null) {
-    throw new TranslationError('bad-shape', 'La respuesta no contiene un array JSON.')
+    throw new TranslationError(
+      'bad-shape',
+      'La respuesta no contiene un array JSON.',
+      raw, // [diag] payload crudo para el modo diagnóstico
+    )
   }
   if (arr.length !== expected) {
     throw new TranslationError(
       'bad-shape',
       `El lote devolvió ${arr.length} traducciones; se esperaban ${expected}.`,
+      raw,
     )
   }
   return arr

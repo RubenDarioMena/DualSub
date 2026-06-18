@@ -62,6 +62,16 @@
   el navegador (sin CORS) hasta que haya proxy; probar Groq/OpenAI/Anthropic/Gemini con
   clave real en teléfono (US1+US2+US3).
 
+- **2026-06-15** — **Modo diagnóstico in-app** (pedido por el usuario: no puede pasar
+  logs desde el móvil). `diagnosticsStore` (log capado + persistido en localStorage, así
+  sobrevive al descarte de pestaña) + `installDiagnostics` (captura `window.error`,
+  `unhandledrejection`, `console.error/warn`, y "app iniciada" por carga). `TranslationError`
+  ahora lleva `detail` con el **payload crudo**; `decodeBatch`/`llmAdapter` lo rellenan y
+  `TranslatePanel` lo loguea. Pantalla `DiagnosticsScreen` (ruta `screen:'diagnostics'`,
+  acceso desde Settings) con lista + botón **Copiar** + textarea de texto plano (respaldo
+  para copiar a mano en http LAN, sin portapapeles). Verificado en navegador: un bad-shape
+  de japonés captura el array crudo → **se ve que el modelo fusiona líneas (2→1)**, causa
+  probable del bug. 71/71 + build OK. (Pendiente: endurecer parser JP con datos reales.)
 - **2026-06-15** — **003 bugfix (clave con espacios)**: un **espacio inicial** en la
   API key (típico al pegar en el móvil) rompía el header `Authorization` y el proveedor
   devolvía 401 → mensaje "clave inválida". Diagnosticado con la API real de DeepSeek
@@ -97,9 +107,11 @@
   (horizontal + rotación) con la checklist de `quickstart.md`.
 
 ## Roadmap de specs (framework §5)
-- **000** — Formato DualSub JSON v1 + modelos + sync (tests)
+- **000** — Formato DualSub JSON v1 + modelos + sync (tests) ✅
 - **001** — Player dual con datos mock (overlay horizontal + lista vertical con
-  highlight/autoscroll, offset)
-- **002** — Import: video + detección sidecar .srt/.vtt + parsers + merge dual
-- **003** — Pipeline API (BYOK): audio → ASR con timestamps → traducción 1:1 →
-  DualSub JSON
+  highlight/autoscroll, offset) ✅ (pendiente menor: re-verificar overlay/offset y B2 en teléfono)
+- **002** — Import: video + detección sidecar .srt/.vtt + parsers + merge dual ✅
+- **003** — Traducción vía API (BYOK): rellenar destino 1:1 con clave del usuario ✅
+  (validado en teléfono; 7 proveedores; auto-bisección 1:1; modo diagnóstico)
+- **004** — Pipeline ASR (audio → texto con timestamps) para el caso "no tengo
+  ningún subtítulo" (antes era el resto de la 003; se acotó la 003 a traducción).
