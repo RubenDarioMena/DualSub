@@ -10,7 +10,14 @@ export default function MediaPicker() {
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) setMedia(URL.createObjectURL(file))
+    if (file) {
+      // El File es un Blob: lo retenemos para poder guardarlo en el navegador (US3).
+      setMedia(
+        URL.createObjectURL(file),
+        { name: file.name, sizeBytes: file.size, mimeType: file.type },
+        file,
+      )
+    }
   }
 
   return (

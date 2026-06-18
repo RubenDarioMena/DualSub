@@ -47,9 +47,36 @@
   build OK** (tsc estricto). Spec en `specs/003-translate-api-byok/`.
 
 ## En curso
-- (nada)
+- **Validación en teléfono (004 + 005)**: 004 US1–US4 (recarga, biblioteca, video opt-in,
+  derivar par) y 005 ASR con clave real (Groq/OpenAI) + clip corto. Ver
+  `specs/004-local-persistence/quickstart.md` y `specs/005-asr-pipeline/spec.md` §pendiente.
 
 ## Hecho (cont.)
+- **2026-06-18** — **Spec 004 — Persistencia local + biblioteca** (US1–US4). El trabajo
+  sobrevive a recargas: auto-guardado **debounced** (doc/offset/posición) en **IndexedDB**
+  tras el puerto `ProjectStore` (interfaz pura en `core/services`, adaptadores
+  `idbProjectStore` + `memoryProjectStore` fallback FR-012). **Biblioteca** como hogar
+  (`LibraryScreen`: listar/abrir/borrar/espacio, móvil-first 360px). **US3**: interruptor
+  opt-in "guardar el video en el navegador" en Settings — retiene el `Blob` (`MediaPicker`/
+  `playerStore`), `storageMode:'with-video'`, y **degrada a ligero** ante cuota sin perder
+  subtítulos (aviso en llano). **US4**: derivar pares por el inglés base — core puro
+  `combineByPivot`/`selectPair`/`sharesPivotGrid` (`src/core/project/combine.ts`) +
+  `derivePair` en `libraryStore` + UI "Combinar idiomas". **Sin dependencias nuevas.**
+  **94/94 tests verdes** (13 nuevos de `combine`), **build OK**. Verificado en navegador
+  (preview, 360px): biblioteca lista varios proyectos, persisten tras recarga, **EN/ES +
+  EN/JA → JA/ES al instante** (sin traducir, tiempos intactos), toggle de video persistido,
+  cero errores de consola. **Pendiente**: checklist en teléfono real (T023).
+- **2026-06-18** — **Spec 005 — Pipeline ASR (audio → texto con tiempos)** (núcleo). Caso
+  "no tengo subtítulos": transcribir el audio del video. Core puro: interfaz `Transcriber`
+  + catálogo (`core/services/transcriber.ts`) y conversión `buildFromTranscript`
+  (`core/transcription/`, **5 tests**). Engines: `mockTranscriber` (demo) + `whisperAdapter`
+  (multipart `verbose_json`) con **Groq `whisper-large-v3-turbo`** (reusa la clave Groq) +
+  **OpenAI `whisper-1`**; registro `getTranscriber`. UI `TranscribePanel` en Import (se
+  ofrece con video y sin sidecars) + selector de ASR en Settings. **Decisión**: OpenRouter
+  descartado (no hace ASR); **sin extracción de audio** en el navegador (se sube el video,
+  el proveedor extrae el audio; aviso de tamaño ~25 MB). **Sin dependencias nuevas.** 94/94
+  + build OK. **Pendiente**: validar en teléfono con clave real (la red no se prueba en CI,
+  igual que los traductores).
 - **2026-06-15** — **003 — resto de proveedores API conectados** (antes solo Groq +
   stubs). LLM: `openai`/`deepseek` (config sobre `llmAdapter` estilo OpenAI),
   `anthropic` (Messages API) y `gemini` (`generateContent`, clave en URL) con
@@ -85,10 +112,10 @@
   proveedor real (Groq/OpenAI/Anthropic/Gemini) + clave real → traducción real 1:1; US3
   sin clave/clave inválida/red → mensaje accionable sin colgarse; Settings y panel usables
   a 360px. **Nota CORS**: DeepL fallará desde el navegador (sin proxy).
-- **Spec 004 — Pipeline ASR (audio → texto con timestamps)**: extracción de audio +
-  transcripción (Whisper u otro) para cubrir el caso "no tengo ningún subtítulo".
-  Reusa la interfaz de engines y el formato DualSub. (Antes era el resto de la 003;
-  se acotó la 003 a solo traducción.)
+- **Spec 005 — Pipeline ASR (audio → texto con timestamps)**: extracción de audio +
+  transcripción (Whisper v3 turbo vía OpenRouter) para cubrir el caso "no tengo ningún
+  subtítulo". Reusa la interfaz de engines y el formato DualSub. (Antes era el resto de
+  la 003 y luego la 004; va después de persistencia.)
 - **002 — validación en teléfono (ronda 1, 2026-06-13)**: US1/US2/US3 y errores
   mayormente OK. Bugs corregidos: selección de archivos poco fiable / "aparece y
   desaparece" (reset de `value` del input), archivo incompatible borraba lo ya
@@ -113,5 +140,11 @@
 - **002** — Import: video + detección sidecar .srt/.vtt + parsers + merge dual ✅
 - **003** — Traducción vía API (BYOK): rellenar destino 1:1 con clave del usuario ✅
   (validado en teléfono; 7 proveedores; auto-bisección 1:1; modo diagnóstico)
-- **004** — Pipeline ASR (audio → texto con timestamps) para el caso "no tengo
-  ningún subtítulo" (antes era el resto de la 003; se acotó la 003 a traducción).
+- **004** — Persistencia local + biblioteca: proyectos sobreviven a recargas; modo
+  ligero por defecto + video opt-in en Settings; derivar pares por pivote. ✅ (pendiente:
+  checklist en teléfono real).
+- **005** — Pipeline ASR (audio → texto con timestamps) para el caso "no tengo
+  ningún subtítulo". ✅ núcleo (Groq Whisper v3 turbo + OpenAI; OpenRouter descartado —
+  no hace ASR). Pendiente: validar con clave real en teléfono.
+- **006** — YouTube (Camino A): embeber reproductor + overlay doble sub + proxy de
+  captions (no descarga). Decidido 2026-06-17; rompe "sin backend" → línea en DECISIONS.

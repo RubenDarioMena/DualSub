@@ -27,6 +27,7 @@ interface ErrorState {
 export default function TranslatePanel() {
   const doc = usePlayerStore((s) => s.doc)
   const mediaUrl = usePlayerStore((s) => s.mediaUrl)
+  const projectId = usePlayerStore((s) => s.projectId)
   const loadProject = usePlayerStore((s) => s.loadProject)
   const setScreen = usePlayerStore((s) => s.setScreen)
   const provider = useSettingsStore((s) => s.provider)
@@ -76,7 +77,8 @@ export default function TranslatePanel() {
       )
       mergeInto(acc, result.texts)
       const dual = assembleTranslated(doc, doc.targetLang, acc)
-      loadProject({ doc: dual, mediaUrl })
+      // Continúa el MISMO proyecto (no crea uno nuevo); conserva el video (spec 004).
+      loadProject({ doc: dual, mediaUrl, projectId: projectId ?? undefined })
       setStatus('idle')
       diag('info', `Traducción OK (${provider} ${doc.sourceLang}→${doc.targetLang})`) // [diag]
     } catch (e) {

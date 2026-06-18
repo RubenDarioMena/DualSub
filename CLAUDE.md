@@ -48,14 +48,17 @@ pnpm dev / pnpm test / pnpm test:watch / pnpm build / pnpm preview
 
 <!-- SPECKIT START -->
 ## Spec activa
-- **003 — Traducción vía API (BYOK)**: plan en
-  `specs/003-translate-api-byok/plan.md` (spec, research, data-model, contracts,
-  quickstart). Interfaz `Translator` + batching/validación 1:1 + ensamblado en
-  `src/core/services` y `src/core/translation/` (puro, tests en `tests/core/`);
-  `fetch` SOLO en `src/engines/api/` (adaptador base LLM + Groq; resto stubs).
-  `engines/mock/mockTranslator.ts` (proveedor "demo"). Settings BYOK
-  (`src/state/settingsStore.ts` + `src/screens/Settings/`) con clave por proveedor
-  en localStorage. Acción Traducir en el Player (progreso/errores) → `loadProject`.
-  Sin dependencias nuevas (fetch nativo). Reusa 000/001/002. Siguiente:
-  `/speckit-tasks`.
+- **004 — Persistencia local + biblioteca**: ✅ implementada (US1–US4). Puerto
+  `ProjectStore` (interfaz pura en `src/core/services/`) con adaptadores en
+  `src/engines/storage/` (`idbProjectStore` IndexedDB + `memoryProjectStore` fallback
+  FR-012); lógica pura `combineByPivot`/`selectPair` en `src/core/project/` (tests en
+  `tests/core/combine.test.ts`). Modo ligero por defecto + interruptor
+  `saveVideoInBrowser` (degrada ante cuota). `libraryStore` + `LibraryScreen`. Pendiente:
+  checklist en teléfono real (T023).
+- **005 — Pipeline ASR (audio → texto con tiempos)**: ✅ núcleo. Interfaz pura
+  `Transcriber` (`src/core/services/transcriber.ts`) + conversión `buildFromTranscript`
+  (`src/core/transcription/`, tests). Engines `mockTranscriber` + `whisperAdapter`
+  (Groq `whisper-large-v3-turbo` reusando la clave Groq + OpenAI `whisper-1`); UI
+  `TranscribePanel` en Import. Sin dependencias nuevas. Pendiente: validar con clave real
+  en teléfono. Siguiente roadmap: **006 — YouTube (Camino A)**.
 <!-- SPECKIT END -->

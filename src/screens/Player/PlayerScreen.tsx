@@ -18,6 +18,8 @@ import TranslatePanel from './TranslatePanel'
 export default function PlayerScreen() {
   const mediaUrl = usePlayerStore((s) => s.mediaUrl)
   const doc = usePlayerStore((s) => s.doc)
+  const projectId = usePlayerStore((s) => s.projectId)
+  const mediaRef = usePlayerStore((s) => s.mediaRef)
   const viewMode = usePlayerStore((s) => s.viewMode)
   const setViewMode = usePlayerStore((s) => s.setViewMode)
   const setScreen = usePlayerStore((s) => s.setScreen)
@@ -49,6 +51,14 @@ export default function PlayerScreen() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setScreen('library')}
+              aria-label="Biblioteca"
+              className="rounded-full border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-200 active:bg-neutral-800"
+            >
+              ☰
+            </button>
+            <button
+              type="button"
               onClick={() => setScreen('settings')}
               aria-label="Settings"
               className="rounded-full border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-200 active:bg-neutral-800"
@@ -68,9 +78,20 @@ export default function PlayerScreen() {
         {overlay && <SubtitleOverlay />}
         {!mediaUrl && (
           <div className="pointer-events-none absolute inset-0 grid place-items-center p-4 text-center text-sm text-neutral-400">
-            Elige un video local para ver la demo dual.
-            <br />
-            Los subtítulos son de ejemplo (mock).
+            {projectId ? (
+              <span>
+                Vuelve a elegir el video{mediaRef?.name ? ` «${mediaRef.name}»` : ''} para
+                continuar.
+                <br />
+                Tus subtítulos y tu progreso están guardados.
+              </span>
+            ) : (
+              <span>
+                Elige un video local para ver la demo dual.
+                <br />
+                Los subtítulos son de ejemplo (mock).
+              </span>
+            )}
           </div>
         )}
         {/* Controles flotantes en overlay (vuelta a lista + offset). */}

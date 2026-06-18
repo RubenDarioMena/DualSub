@@ -8,7 +8,14 @@ import {
   type ProviderId,
   type Translator,
 } from '../../core/services/translator'
+import {
+  TranscriptionError,
+  type Transcriber,
+  type TranscriberId,
+} from '../../core/services/transcriber'
 import { mockTranslator } from '../mock/mockTranslator'
+import { mockTranscriber } from '../mock/mockTranscriber'
+import { groqTranscriber, openaiTranscriber } from './whisperAdapter'
 import { groqTranslator } from './groq'
 import { openaiTranslator } from './openai'
 import { deepseekTranslator } from './deepseek'
@@ -51,5 +58,32 @@ export function getTranslator(provider: ProviderId): Translator {
       return deeplTranslator
     default:
       return unavailable
+  }
+}
+
+/** Stub de transcripción para proveedores aún no disponibles. */
+const unavailableTranscriber: Transcriber = {
+  async transcribe() {
+    throw new TranscriptionError(
+      'provider-unavailable',
+      'Este proveedor de transcripción todavía no está disponible. Elige otro en Settings.',
+    )
+  },
+}
+
+/**
+ * Devuelve el `Transcriber` del proveedor de ASR. La clave BYOK viaja en
+ * `TranscriptionRequest.apiKey` (reusa la misma clave que la traducción del mismo id).
+ */
+export function getTranscriber(provider: TranscriberId): Transcriber {
+  switch (provider) {
+    case 'mock':
+      return mockTranscriber
+    case 'groq':
+      return groqTranscriber
+    case 'openai':
+      return openaiTranscriber
+    default:
+      return unavailableTranscriber
   }
 }

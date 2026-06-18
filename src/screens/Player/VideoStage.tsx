@@ -21,14 +21,24 @@ export default function VideoStage() {
     const video = videoRef.current
     if (!video) return
     let raf = 0
+    let lastPosWrite = 0
 
     const computeOnce = () => {
       const { doc, offsetMs, setActiveIndex } = usePlayerStore.getState()
       const tMs = Math.round(video.currentTime * 1000)
       setActiveIndex(findActiveSegmentIndex(doc.segments, tMs - offsetMs))
     }
+    // Reporta la posición al store con throttle (~2 s); se persiste con debounce
+    // en `libraryStore`. `force` para pausa/seek (spec 004, D5).
+    const reportPosition = (force = false) => {
+      const now = performance.now()
+      if (!force && now - lastPosWrite < 2000) return
+      lastPosWrite = now
+      usePlayerStore.getState().setPosition(Math.round(video.currentTime * 1000))
+    }
     const loop = () => {
       computeOnce()
+      reportPosition()
       raf = requestAnimationFrame(loop)
     }
     const onPlay = () => {
@@ -40,17 +50,29 @@ export default function VideoStage() {
       usePlayerStore.getState().setPlaying(false)
       cancelAnimationFrame(raf)
       computeOnce()
+      reportPosition(true)
     }
-    const onSeeked = () => computeOnce()
+    const onSeeked = () => {
+      computeOnce()
+      reportPosition(true)
+    }
+    // Al cargar un video nuevo, si hay posición restaurada (>0), salta a ella
+    // (restaurar un proyecto, spec 004 FR-004). Import nuevo ⇒ positionMs 0 ⇒ no salta.
+    const onLoadedMetadata = () => {
+      const { positionMs } = usePlayerStore.getState()
+      if (positionMs > 0) video.currentTime = positionMs / 1000
+    }
 
     video.addEventListener('play', onPlay)
     video.addEventListener('pause', onPause)
     video.addEventListener('seeked', onSeeked)
+    video.addEventListener('loadedmetadata', onLoadedMetadata)
     return () => {
       cancelAnimationFrame(raf)
       video.removeEventListener('play', onPlay)
       video.removeEventListener('pause', onPause)
       video.removeEventListener('seeked', onSeeked)
+      video.removeEventListener('loadedmetadata', onLoadedMetadata)
     }
   }, [])
 

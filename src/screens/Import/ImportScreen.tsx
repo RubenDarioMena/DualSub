@@ -7,6 +7,7 @@
  */
 import { useState } from 'react'
 import type { LangCode } from '../../core/models'
+import type { MediaRef } from '../../core/services/projectStore'
 import { buildSingle, mergeDual } from '../../core/formats/buildDocument'
 import { parseSrt } from '../../core/formats/srt'
 import { parseVtt } from '../../core/formats/vtt'
@@ -17,8 +18,11 @@ import {
   type SubtitleTrack,
 } from '../../core/formats/subtitleCommon'
 import { usePlayerStore } from '../../state/playerStore'
+import { useLibraryStore } from '../../state/libraryStore'
+import { diag } from '../../state/diagnosticsStore'
 import SidecarPicker from './SidecarPicker'
 import TrackConfirm, { type TargetChoice } from './TrackConfirm'
+import TranscribePanel from './TranscribePanel'
 
 interface LoadedTrack {
   track: SubtitleTrack
@@ -41,9 +45,14 @@ async function loadSidecar(file: File): Promise<LoadedTrack> {
 
 export default function ImportScreen() {
   const loadProject = usePlayerStore((s) => s.loadProject)
+  const setScreen = usePlayerStore((s) => s.setScreen)
+  const hasProjects = useLibraryStore((s) => s.projects.length > 0)
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [videoName, setVideoName] = useState<string | null>(null)
+  const [videoRef, setVideoRef] = useState<MediaRef | null>(null)
+  // Blob real del video, para poder guardarlo en el navegador (spec 004, US3).
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null)
   const [tracks, setTracks] = useState<LoadedTrack[]>([])
   const [targetChoice, setTargetChoice] = useState<TargetChoice>('none')
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +63,8 @@ export default function ImportScreen() {
       return URL.createObjectURL(file)
     })
     setVideoName(file.name)
+    setVideoRef({ name: file.name, sizeBytes: file.size, mimeType: file.type })
+    setVideoBlob(file)
   }
 
   const onSidecars = async (files: File[]) => {
@@ -120,8 +131,10 @@ export default function ImportScreen() {
               source.lang,
               targetChoice === 'none' ? undefined : targetChoice,
             )
-      loadProject({ doc, mediaUrl: videoUrl })
-    } catch {
+      loadProject({ doc, mediaUrl: videoUrl, mediaRef: videoRef, mediaBlob: videoBlob })
+    } catch (e) {
+      // [diag] registra la causa real (antes se tragaba el error → mensaje opaco).
+      diag('error', 'Import: no se pudo abrir el proyecto', e instanceof Error ? `${e.name}: ${e.message}` : String(e))
       setError('No se pudo construir el documento a partir de los subtítulos.')
     }
   }
@@ -129,7 +142,29 @@ export default function ImportScreen() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 bg-neutral-950 px-4 py-8 text-neutral-100">
       <header>
-        <h1 className="text-xl font-semibold">Importar</h1>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {hasProjects && (
+              <button
+                type="button"
+                onClick={() => setScreen('library')}
+                aria-label="Volver a la biblioteca"
+                className="shrink-0 rounded-full border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-200 active:bg-neutral-800"
+              >
+                ←
+              </button>
+            )}
+            <h1 className="text-xl font-semibold">Importar</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => setScreen('settings')}
+            aria-label="Settings"
+            className="shrink-0 rounded-full border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-200 active:bg-neutral-800"
+          >
+            ⚙
+          </button>
+        </div>
         <p className="mt-1 text-sm text-neutral-400">
           Elige un video y sus subtítulos (.srt o .vtt). Con dos archivos verás
           doble subtítulo.
@@ -161,6 +196,11 @@ export default function ImportScreen() {
           onTargetChoiceChange={setTargetChoice}
           onOpen={onOpen}
         />
+      )}
+
+      {/* Caso "no tengo subtítulos": video elegido y aún sin pistas → ASR (spec 005). */}
+      {videoUrl && tracks.length === 0 && (
+        <TranscribePanel videoUrl={videoUrl} videoBlob={videoBlob} videoRef={videoRef} />
       )}
     </div>
   )

@@ -2,6 +2,26 @@
 
 > Log de decisiones. Una línea por decisión, con fecha. Lo más reciente arriba.
 
+- **2026-06-18** — **Spec 005 (ASR) — proveedor Whisper y "sin extracción de audio"**.
+  El roadmap decía "Whisper vía OpenRouter", pero **OpenRouter NO ofrece transcripción de
+  audio** (es un router de LLM/multimodal de texto), así que se descartó. Se usa **Groq
+  `whisper-large-v3-turbo`** (rápido, barato, endpoint compatible con OpenAI
+  `audio/transcriptions`, **reusa la clave Groq** que ya existe para traducción) + **OpenAI
+  `whisper-1`** como alternativa, sobre un único `whisperAdapter` (multipart + `verbose_json`
+  → segmentos con tiempos). **Sin extracción de audio en el navegador**: se sube el video
+  tal cual y el proveedor extrae el audio; evita una dependencia pesada (ffmpeg.wasm). Coste
+  práctico: archivos grandes pueden ser rechazados (~25 MB) → la UI avisa y mapea `413` a
+  `too-large`. Interfaz pura `Transcriber` (core) + conversión testeada `buildFromTranscript`;
+  red solo en `engines/api`. Sin dependencias nuevas.
+- **2026-06-18** — **Spec 004 implementada (persistencia local + biblioteca)**. Almacenamiento
+  = **IndexedDB nativo** (sin `idb`) tras un puerto `ProjectStore` (interfaz pura en
+  `core/services`, adaptadores `idbProjectStore` + `memoryProjectStore` fallback FR-012), para
+  migrar a nativo (Capacitor/RN) sin tocar UI/core. **Modo ligero por defecto** (doc + offset +
+  posición, sin video) + interruptor **opt-in** "guardar el video en el navegador" en Settings;
+  ante cuota se **degrada a ligero** sin perder subtítulos (`SaveResult.degradedToLight`).
+  Auto-guardado **debounced** suscrito al Player. **Derivar pares por el inglés base**
+  (`combineByPivot`/`selectPair`, core puro testeado): de EN/ES + EN/JA → ES/JA al instante,
+  sin traducir y con tiempos intactos. Sin dependencias nuevas.
 - **2026-06-15** — **Auto-bisección 1:1** ante `bad-shape` por fusión de líneas del LLM
   (diagnosticado con log real: japonés devolvía 39/40 porque el modelo une cláusulas).
   Helper puro `translateWithBisect` (core, testeado) parte el lote en mitades y reintenta

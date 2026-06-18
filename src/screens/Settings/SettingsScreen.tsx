@@ -5,17 +5,28 @@
  */
 import { useState } from 'react'
 import { usePlayerStore } from '../../state/playerStore'
+import { useLibraryStore } from '../../state/libraryStore'
 import { useSettingsStore } from '../../state/settingsStore'
 import { PROVIDERS, getProviderInfo, type ProviderId } from '../../core/services/translator'
+import { TRANSCRIBERS, type TranscriberId } from '../../core/services/transcriber'
 
 export default function SettingsScreen() {
   const setScreen = usePlayerStore((s) => s.setScreen)
-  const mediaUrl = usePlayerStore((s) => s.mediaUrl)
+  const projectId = usePlayerStore((s) => s.projectId)
+  const hasProjects = useLibraryStore((s) => s.projects.length > 0)
+  const saveNow = useLibraryStore((s) => s.saveNow)
+  // Volver al sitio con más sentido: proyecto abierto → Player; si hay biblioteca
+  // → Biblioteca; si no → Import.
+  const back = projectId ? 'player' : hasProjects ? 'library' : 'import'
   const provider = useSettingsStore((s) => s.provider)
   const keys = useSettingsStore((s) => s.keys)
   const setProvider = useSettingsStore((s) => s.setProvider)
   const setKey = useSettingsStore((s) => s.setKey)
   const clearKey = useSettingsStore((s) => s.clearKey)
+  const asrProvider = useSettingsStore((s) => s.asrProvider)
+  const setAsrProvider = useSettingsStore((s) => s.setAsrProvider)
+  const saveVideoInBrowser = useSettingsStore((s) => s.saveVideoInBrowser)
+  const setSaveVideoInBrowser = useSettingsStore((s) => s.setSaveVideoInBrowser)
 
   const info = getProviderInfo(provider)
   // Borrador local del input; se confirma con "Guardar".
@@ -37,12 +48,12 @@ export default function SettingsScreen() {
       <header className="flex shrink-0 items-center gap-3 border-b border-neutral-800 px-4 py-3">
         <button
           type="button"
-          onClick={() => setScreen(mediaUrl ? 'player' : 'import')}
+          onClick={() => setScreen(back)}
           className="rounded-full border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 active:bg-neutral-800"
         >
           ← Volver
         </button>
-        <h1 className="text-sm font-semibold tracking-tight">Settings · Traducción</h1>
+        <h1 className="text-sm font-semibold tracking-tight">Settings</h1>
         {/* [diag] acceso al modo diagnóstico */}
         <button
           type="button"
@@ -125,6 +136,58 @@ export default function SettingsScreen() {
             </p>
           </section>
         )}
+
+        {/* --- Transcripción (ASR), spec 005 --- */}
+        <section className="flex flex-col gap-2 border-t border-neutral-800 pt-5">
+          <label htmlFor="asr" className="text-xs font-medium text-neutral-400">
+            Transcripción del audio (cuando no hay subtítulos)
+          </label>
+          <select
+            id="asr"
+            value={asrProvider}
+            onChange={(e) => setAsrProvider(e.target.value as TranscriberId)}
+            className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100"
+          >
+            {TRANSCRIBERS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-neutral-500">
+            Genera los subtítulos a partir del audio del video. Groq y OpenAI reusan la
+            misma API key que ya pusiste arriba para ese proveedor
+            {asrProvider !== 'mock' && (
+              <> · {keys[asrProvider] ? 'clave detectada ✓' : 'falta la clave de ese proveedor'}</>
+            )}
+            .
+          </p>
+        </section>
+
+        {/* --- Guardar el video en el navegador (US3) --- */}
+        <section className="flex flex-col gap-2 border-t border-neutral-800 pt-5">
+          <label className="flex items-center justify-between gap-3">
+            <span className="text-sm font-medium text-neutral-200">
+              Guardar el video en el navegador
+            </span>
+            <input
+              type="checkbox"
+              checked={saveVideoInBrowser}
+              onChange={(e) => {
+                setSaveVideoInBrowser(e.target.checked)
+                // Aplica el cambio al proyecto abierto sin esperar al próximo guardado.
+                void saveNow()
+              }}
+              className="h-5 w-9 shrink-0 appearance-none rounded-full bg-neutral-700 transition-colors before:block before:h-4 before:w-4 before:translate-x-0.5 before:rounded-full before:bg-white before:transition-transform checked:bg-sky-500 checked:before:translate-x-[1.125rem]"
+            />
+          </label>
+          <p className="text-xs text-neutral-500">
+            Por defecto solo guardamos los subtítulos y tu progreso (ocupan poco). El
+            video pesa mucho: si lo activas, al reabrir el proyecto se reproduce sin
+            volver a elegir el archivo, pero el navegador puede borrarlo para liberar
+            espacio y, si no cabe, guardaremos solo los subtítulos.
+          </p>
+        </section>
       </div>
     </div>
   )
