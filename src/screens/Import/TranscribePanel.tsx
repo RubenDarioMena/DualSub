@@ -19,12 +19,7 @@ import { buildFromTranscript } from '../../core/transcription/buildFromTranscrip
 import { usePlayerStore } from '../../state/playerStore'
 import { useSettingsStore } from '../../state/settingsStore'
 import { diag } from '../../state/diagnosticsStore'
-
-const LANG_LABEL: Record<LangCode, string> = {
-  en: 'Inglés',
-  es: 'Español',
-  ja: 'Japonés',
-}
+import { LANG_LABEL } from '../shared/langLabels'
 
 /** Por encima de esto avisamos: los proveedores suelen rechazar archivos grandes. */
 const SIZE_WARN_MB = 25
@@ -76,7 +71,8 @@ export default function TranscribePanel({
         },
         (p) => setStage(p.stage),
       )
-      const doc = buildFromTranscript(result)
+      // La transcripción queda como pista MAESTRA (su timing manda, spec 007).
+      const doc = buildFromTranscript(result, info.label)
       // Proyecto NUEVO con el video ya elegido; conserva el blob para guardarlo (004).
       loadProject({ doc, mediaUrl: videoUrl, mediaRef: videoRef, mediaBlob: videoBlob })
       diag('info', `ASR OK: ${result.segments.length} segmentos (${asrProvider})`)

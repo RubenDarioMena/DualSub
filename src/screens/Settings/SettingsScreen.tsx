@@ -13,11 +13,12 @@ import { TRANSCRIBERS, type TranscriberId } from '../../core/services/transcribe
 export default function SettingsScreen() {
   const setScreen = usePlayerStore((s) => s.setScreen)
   const projectId = usePlayerStore((s) => s.projectId)
+  const returnScreen = usePlayerStore((s) => s.returnScreen)
   const hasProjects = useLibraryStore((s) => s.projects.length > 0)
   const saveNow = useLibraryStore((s) => s.saveNow)
-  // Volver al sitio con más sentido: proyecto abierto → Player; si hay biblioteca
-  // → Biblioteca; si no → Import.
-  const back = projectId ? 'player' : hasProjects ? 'library' : 'import'
+  // Volver a la pantalla desde la que se entró (así un import a medias no se
+  // pierde); sin origen registrado, heurística: Player → Biblioteca → Import.
+  const back = returnScreen ?? (projectId ? 'player' : hasProjects ? 'library' : 'import')
   const provider = useSettingsStore((s) => s.provider)
   const setProvider = useSettingsStore((s) => s.setProvider)
   const asrProvider = useSettingsStore((s) => s.asrProvider)

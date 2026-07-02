@@ -21,7 +21,7 @@ import { usePlayerStore } from '../../state/playerStore'
 import { useLibraryStore } from '../../state/libraryStore'
 import { diag } from '../../state/diagnosticsStore'
 import SidecarPicker from './SidecarPicker'
-import TrackConfirm, { type TargetChoice } from './TrackConfirm'
+import TrackConfirm from './TrackConfirm'
 import TranscribePanel from './TranscribePanel'
 
 interface LoadedTrack {
@@ -54,7 +54,6 @@ export default function ImportScreen() {
   // Blob real del video, para poder guardarlo en el navegador (spec 004, US3).
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null)
   const [tracks, setTracks] = useState<LoadedTrack[]>([])
-  const [targetChoice, setTargetChoice] = useState<TargetChoice>('none')
   const [error, setError] = useState<string | null>(null)
 
   const onVideo = (file: File) => {
@@ -89,7 +88,6 @@ export default function ImportScreen() {
         t.role = i === 0 ? 'source' : 'target'
       })
       setTracks(loaded.slice(0, 2))
-      setTargetChoice('none')
     }
     setError(errors.length > 0 ? errors.join(' ') : null)
   }
@@ -111,26 +109,19 @@ export default function ImportScreen() {
   const dual = tracks.length === 2
 
   const allLangsChosen = tracks.length > 0 && tracks.every((t) => t.lang !== null)
-  const dualLangsDistinct =
-    !dual || (source?.lang != null && target?.lang != null && source.lang !== target.lang)
-  const validationError =
-    dual && allLangsChosen && !dualLangsDistinct
-      ? 'El origen y el destino no pueden ser el mismo idioma.'
-      : null
-  const canOpen =
-    videoUrl !== null && allLangsChosen && dualLangsDistinct && !error
+  const canOpen = videoUrl !== null && allLangsChosen && !error
 
   const onOpen = () => {
     if (!canOpen || !videoUrl || !source?.lang) return
     try {
+      // El nombre de archivo queda como etiqueta de la pista (spec 007).
       const doc =
         dual && target?.lang
-          ? mergeDual(source.track, source.lang, target.track, target.lang)
-          : buildSingle(
-              source.track,
-              source.lang,
-              targetChoice === 'none' ? undefined : targetChoice,
-            )
+          ? mergeDual(source.track, source.lang, target.track, target.lang, {
+              source: source.filename,
+              target: target.filename,
+            })
+          : buildSingle(source.track, source.lang, source.filename)
       loadProject({ doc, mediaUrl: videoUrl, mediaRef: videoRef, mediaBlob: videoBlob })
     } catch (e) {
       // [diag] registra la causa real (antes se tragaba el error → mensaje opaco).
@@ -188,12 +179,10 @@ export default function ImportScreen() {
             lang,
             role,
           }))}
-          targetChoice={targetChoice}
-          error={validationError}
+          error={null}
           canOpen={canOpen}
           onLangChange={onLangChange}
           onMakeSource={onMakeSource}
-          onTargetChoiceChange={setTargetChoice}
           onOpen={onOpen}
         />
       )}

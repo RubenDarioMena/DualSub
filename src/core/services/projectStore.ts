@@ -6,6 +6,7 @@
  * Spec: specs/004-local-persistence · contrato: contracts/project-store.md
  */
 import type { DualSubDocument, LangCode } from '../models'
+import type { TrackView } from '../tracks'
 
 /** Identidad del archivo de video (modo ligero: re-pedir el mismo archivo). */
 export interface MediaRef {
@@ -26,6 +27,8 @@ export interface StoredProject {
   offsetMs: number
   /** Última posición de reproducción, en ms. */
   positionMs: number
+  /** Vista Arriba/Abajo elegida (spec 007); ausente en registros antiguos. */
+  view?: TrackView
   storageMode: StorageMode
   media: MediaRef
   createdAt: number
@@ -36,10 +39,8 @@ export interface StoredProject {
 export interface StoredProjectMeta {
   id: string
   title: string
-  sourceLang: LangCode
-  targetLang: LangCode
-  /** Idiomas presentes en `texts` (para derivación de pares, US4). */
-  availableLangs: LangCode[]
+  /** Idiomas del proyecto (el maestro primero, sin duplicados). */
+  langs: LangCode[]
   storageMode: StorageMode
   hasVideo: boolean
   /** Tamaño aproximado ocupado (doc + video si lo hay). */

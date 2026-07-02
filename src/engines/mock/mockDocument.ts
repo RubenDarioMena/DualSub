@@ -77,9 +77,12 @@ export function getMockDualSubDocument(): DualSubDocument {
   }
 
   return {
-    version: 1,
-    sourceLang: 'en',
-    targetLang: 'es',
+    version: 2,
+    masterId: 'en',
+    tracks: [
+      { id: 'en', lang: 'en', origin: 'mock', label: 'Demo' },
+      { id: 'es', lang: 'es', origin: 'mock', label: 'Demo' },
+    ],
     segments,
     meta: { title: 'Demo dual (mock)', source: 'mock' },
   }

@@ -7,6 +7,7 @@
  */
 import { serializeDualSub, parseDualSub } from '../../core/formats/dualsub'
 import type { LangCode } from '../../core/models'
+import type { TrackView } from '../../core/tracks'
 import type {
   MediaRef,
   ProjectStore,
@@ -26,9 +27,14 @@ interface ProjectRecord {
   schemaVersion: 1
   title: string
   docJson: string
-  sourceLang: LangCode
-  targetLang: LangCode
-  availableLangs: LangCode[]
+  /** Idiomas del proyecto (maestro primero). Registros pre-007 no lo tienen. */
+  langs?: LangCode[]
+  /** Vista Arriba/Abajo elegida (spec 007). */
+  view?: TrackView
+  /** Campos legacy (pre-007), solo para leer registros antiguos. */
+  sourceLang?: LangCode
+  targetLang?: LangCode
+  availableLangs?: LangCode[]
   offsetMs: number
   positionMs: number
   storageMode: StorageMode
@@ -82,14 +88,12 @@ async function getRecord(id: string): Promise<ProjectRecord | undefined> {
   )
 }
 
-/** Idiomas presentes en algún segmento (para derivación de pares, US4). */
+/** Idiomas del documento: el maestro primero, sin duplicados (spec 007). */
 function collectLangs(project: StoredProject): LangCode[] {
-  const seen = new Set<LangCode>()
-  for (const seg of project.doc.segments) {
-    for (const lang of Object.keys(seg.texts) as LangCode[]) {
-      if (seg.texts[lang] != null) seen.add(lang)
-    }
-  }
+  const doc = project.doc
+  const master = doc.tracks.find((t) => t.id === doc.masterId) ?? doc.tracks[0]
+  const seen = new Set<LangCode>([master.lang])
+  for (const t of doc.tracks) seen.add(t.lang)
   return [...seen]
 }
 
@@ -99,9 +103,8 @@ function toRecord(project: StoredProject, createdAt: number): ProjectRecord {
     schemaVersion: 1,
     title: project.title,
     docJson: serializeDualSub(project.doc),
-    sourceLang: project.doc.sourceLang,
-    targetLang: project.doc.targetLang,
-    availableLangs: collectLangs(project),
+    langs: collectLangs(project),
+    ...(project.view ? { view: project.view } : {}),
     offsetMs: project.offsetMs,
     positionMs: project.positionMs,
     storageMode: project.storageMode,
@@ -111,14 +114,21 @@ function toRecord(project: StoredProject, createdAt: number): ProjectRecord {
   }
 }
 
+/** Idiomas para listar, tolerante con registros pre-007 (sourceLang/targetLang). */
+function recordLangs(r: ProjectRecord): LangCode[] {
+  if (r.langs && r.langs.length > 0) return r.langs
+  const seen = new Set<LangCode>()
+  if (r.sourceLang) seen.add(r.sourceLang)
+  for (const l of r.availableLangs ?? []) seen.add(l)
+  return [...seen]
+}
+
 function toMeta(r: ProjectRecord): StoredProjectMeta {
   const hasVideo = r.storageMode === 'with-video'
   return {
     id: r.id,
     title: r.title,
-    sourceLang: r.sourceLang,
-    targetLang: r.targetLang,
-    availableLangs: r.availableLangs,
+    langs: recordLangs(r),
     storageMode: r.storageMode,
     hasVideo,
     sizeBytes: r.docJson.length + (hasVideo ? r.media.sizeBytes : 0),
@@ -163,7 +173,9 @@ export const idbProjectStore: ProjectStore = {
       id: r.id,
       schemaVersion: 1,
       title: r.title,
+      // parseDualSub migra al vuelo los docs v1 guardados antes de la 007.
       doc: parseDualSub(r.docJson),
+      ...(r.view ? { view: r.view } : {}),
       offsetMs: r.offsetMs,
       positionMs: r.positionMs,
       storageMode: r.storageMode,

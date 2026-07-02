@@ -84,3 +84,10 @@
 - **2026-06-12** — Sin IA local en v0.1: procesamiento vía APIs. Engine local
   alternativo en fase futura, sin rehacer la arquitectura de interfaces
   (`core/services`).
+- **2026-07-01** — Formato DualSub v2 multi-pista (spec 007): pistas con id/idioma/
+  etiqueta + pista maestra que fija el timing (la transcripción manda); varias
+  traducciones por idioma; migración v1→v2 al parsear (sin migración de datos en
+  IDB). La vista Arriba/Abajo es estado de proyecto, no del documento.
+- **2026-07-01** — La traducción parte SIEMPRE de la pista maestra (no de otra
+  traducción) y el destino se elige al traducir (dropdown en el Player), no al
+  importar: muere el `targetLang` placeholder de la 002.

@@ -9,6 +9,8 @@ import TranscriptRow from './TranscriptRow'
 
 export default function TranscriptList() {
   const doc = usePlayerStore((s) => s.doc)
+  const topId = usePlayerStore((s) => s.topId)
+  const bottomId = usePlayerStore((s) => s.bottomId)
   const activeIndex = usePlayerStore((s) => s.activeIndex)
   const requestSeek = usePlayerStore((s) => s.requestSeek)
   const activeRef = useRef<HTMLButtonElement>(null)
@@ -37,8 +39,8 @@ export default function TranscriptList() {
             ref={i === activeIndex ? activeRef : undefined}
             segment={seg}
             index={i}
-            sourceLang={doc.sourceLang}
-            targetLang={doc.targetLang}
+            topId={topId}
+            bottomId={bottomId}
             isActive={i === activeIndex}
             onSelect={onSelect}
           />

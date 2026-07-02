@@ -11,8 +11,8 @@ import type {
   StoredProject,
   StoredProjectMeta,
 } from '../core/services/projectStore'
-import type { LangCode } from '../core/models'
-import { combineByPivot, selectPair, PivotMismatchError } from '../core/project/combine'
+import { combineByPivot, PivotMismatchError } from '../core/project/combine'
+import { defaultView } from '../core/tracks'
 import { getProjectStore } from '../engines/storage'
 import { usePlayerStore } from './playerStore'
 import { useSettingsStore } from './settingsStore'
@@ -36,11 +36,13 @@ interface LibraryState {
   /** Descarta el aviso de degradación de video. */
   dismissVideoNotice: () => void
   /**
-   * Deriva un par (p. ej. ES/JA) combinando dos proyectos que comparten el inglés
-   * base y la rejilla de tiempos, SIN traducir (US4). Abre el resultado en el Player.
-   * Devuelve `false` si no comparten esqueleto (no toca los originales).
+   * Combina dos proyectos que comparten el idioma base y la rejilla de tiempos en
+   * UN proyecto multi-pista (p. ej. EN/ES + EN/JA → EN/ES/JA), SIN traducir (US4,
+   * reformulado en spec 007). Abre el resultado en el Player con las pistas
+   * cruzadas visibles. Devuelve `false` si no comparten esqueleto (no toca los
+   * originales).
    */
-  derivePair: (idA: string, idB: string, source: LangCode, target: LangCode) => Promise<boolean>
+  combineProjects: (idA: string, idB: string) => Promise<boolean>
   /** Al arrancar: si hay proyectos, aterriza en la Biblioteca (US2). */
   init: () => Promise<void>
 }
@@ -56,6 +58,7 @@ function buildStoredProject(
     schemaVersion: 1,
     title: p.doc.meta?.title ?? p.mediaRef?.name ?? 'Proyecto',
     doc: p.doc,
+    view: { top: p.topId, bottom: p.bottomId },
     offsetMs: p.offsetMs,
     positionMs: p.positionMs,
     storageMode,
@@ -119,6 +122,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       positionMs: proj.positionMs,
       mediaRef: proj.media,
       mediaBlob,
+      view: proj.view ?? null,
     })
   },
 
@@ -134,17 +138,25 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
   dismissVideoNotice: () => set({ videoDegraded: false }),
 
-  derivePair: async (idA, idB, source, target) => {
+  combineProjects: async (idA, idB) => {
     const store = await getProjectStore()
     const [a, b] = await Promise.all([store.get(idA), store.get(idB)])
     if (!a || !b) return false
     try {
       const combined = combineByPivot(a.doc, b.doc)
-      const paired = selectPair(combined, source, target)
-      const title = `${source.toUpperCase()}→${target.toUpperCase()} · ${a.title}`
-      const doc = { ...paired, meta: { ...paired.meta, title } }
+      const langs = [...new Set(combined.tracks.map((t) => t.lang.toUpperCase()))]
+      const title = `${langs.join('+')} · ${a.title}`
+      const doc = { ...combined, meta: { ...combined.meta, title } }
+      // Vista cruzada: la primera pista no-maestra de A arriba y la primera
+      // aportada por B abajo (así EN/ES + EN/JA abre como ES/JA).
+      const top = a.doc.tracks.find((t) => t.id !== a.doc.masterId)?.id ?? doc.masterId
+      const bottom = doc.tracks[a.doc.tracks.length]?.id ?? defaultView(doc).bottom
       // Proyecto NUEVO (id nuevo), ligero y sin video; el auto-guardado lo persiste.
-      usePlayerStore.getState().loadProject({ doc, mediaUrl: null })
+      usePlayerStore.getState().loadProject({
+        doc,
+        mediaUrl: null,
+        view: { top, bottom: bottom === top ? null : bottom },
+      })
       return true
     } catch (e) {
       if (e instanceof PivotMismatchError) return false
@@ -178,7 +190,9 @@ usePlayerStore.subscribe((s, prev) => {
     s.doc === prev.doc &&
     s.offsetMs === prev.offsetMs &&
     s.positionMs === prev.positionMs &&
-    s.mediaBlob === prev.mediaBlob
+    s.mediaBlob === prev.mediaBlob &&
+    s.topId === prev.topId &&
+    s.bottomId === prev.bottomId
   ) {
     return
   }

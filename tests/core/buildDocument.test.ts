@@ -8,26 +8,18 @@ import movieEn from '../fixtures/movie.en.srt?raw'
 import movieEs from '../fixtures/movie.es.srt?raw'
 
 describe('buildSingle (US1)', () => {
-  it('construye un documento solo-origen válido', () => {
-    const doc = buildSingle(parseSrt(cleanSrt), 'en')
-    expect(doc.sourceLang).toBe('en')
+  it('construye un documento de una sola pista (maestra) válido', () => {
+    const doc = buildSingle(parseSrt(cleanSrt), 'en', 'clean.srt')
+    expect(doc.masterId).toBe('en')
+    expect(doc.tracks).toEqual([
+      { id: 'en', lang: 'en', origin: 'import', label: 'clean.srt' },
+    ])
     expect(doc.segments).toHaveLength(3)
     expect(doc.segments[0].texts.en).toBe('Hello there.')
     expect(doc.segments[0].texts.es).toBeUndefined()
     expect(doc.meta?.source).toBe('import-srt')
-    // Red de seguridad: cumple las invariantes de spec 000.
+    // Red de seguridad: cumple las invariantes de spec 000/007.
     expect(() => validateDocument(doc)).not.toThrow()
-  })
-
-  it('usa un targetLang placeholder distinto del origen cuando se omite (D7)', () => {
-    const doc = buildSingle(parseSrt(cleanSrt), 'en')
-    expect(doc.targetLang).not.toBe('en')
-  })
-
-  it('respeta el targetLang elegido por el usuario (preparado para spec 003)', () => {
-    const doc = buildSingle(parseSrt(cleanSrt), 'en', 'ja')
-    expect(doc.targetLang).toBe('ja')
-    expect(doc.segments[0].texts.ja).toBeUndefined() // sin texto destino aún
   })
 
   it('normaliza cues desordenados/solapados a un documento válido (US1 esc.4)', () => {
@@ -50,8 +42,11 @@ describe('mergeDual (US2)', () => {
       'es',
     )
     expect(() => validateDocument(doc)).not.toThrow()
-    expect(doc.sourceLang).toBe('en')
-    expect(doc.targetLang).toBe('es')
+    expect(doc.masterId).toBe('en')
+    expect(doc.tracks.map((t) => [t.id, t.lang])).toEqual([
+      ['en', 'en'],
+      ['es', 'es'],
+    ])
     // El timing es el del origen (2 segmentos EN).
     expect(doc.segments).toHaveLength(2)
     // Dos cues ES solapan el primer segmento EN → concatenados con \n.
@@ -97,6 +92,16 @@ describe('mergeDual (US2)', () => {
     const doc = mergeDual(en, 'en', es, 'es')
     expect(doc.segments[0].texts.es).toBeUndefined()
     expect(doc.segments[1].texts.es).toBe('Solo el segundo.')
+    expect(() => validateDocument(doc)).not.toThrow()
+  })
+
+  it('dos pistas del MISMO idioma se desambiguan (es, es-2) — spec 007', () => {
+    const es1 = parseSrt(movieEs)
+    const es2 = parseSrt(movieEs)
+    const doc = mergeDual(es1, 'es', es2, 'es', { source: 'a.srt', target: 'b.srt' })
+    expect(doc.tracks.map((t) => t.id)).toEqual(['es', 'es-2'])
+    expect(doc.masterId).toBe('es')
+    expect(doc.segments[0].texts['es-2']).toBeDefined()
     expect(() => validateDocument(doc)).not.toThrow()
   })
 })

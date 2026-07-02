@@ -18,6 +18,10 @@ export default function MediaPicker() {
         file,
       )
     }
+    // Resetea el input: en móvil `change` no dispara si se re-elige el MISMO
+    // archivo (el flujo normal al restaurar un proyecto ligero). Igual que en
+    // SidecarPicker (bugfix 002-A).
+    e.target.value = ''
   }
 
   return (

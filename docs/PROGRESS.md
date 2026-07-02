@@ -46,6 +46,28 @@
   reintento de lo pendiente, FR-008). Sin dependencias nuevas. **71/71 tests verdes,
   build OK** (tsc estricto). Spec en `specs/003-translate-api-byok/`.
 
+- **2026-07-01** — **Spec 007 — Multi-pista (DualSub v2) + barrido de UX**. El formato
+  pasa de par fijo a PISTAS (`masterId` + `tracks[]`; texts por id de pista `"es"`,
+  `"es-2"`…): la transcripción/pista principal es la MAESTRA del timing y la traducción
+  siempre parte de ella; puede haber varias traducciones del mismo idioma; el par
+  visible se elige con dropdowns **Arriba/Abajo** en el Player (vista persistida por
+  proyecto). Migración v1→v2 automática al parsear (los proyectos guardados se leen sin
+  tocar; verificado sembrando un registro legacy en IDB). "Combinar" de la biblioteca
+  ahora une TODAS las pistas en un proyecto (sin `selectPair`). Bugs de UX corregidos:
+  (1) traducir reseteaba posición+offset (`updateDoc` no toca nada más); (2) fallo a
+  mitad de traducción ya no pierde lo parcial (se ensambla en la pista y reintentar =
+  completar); (3) ir a Settings desde Import descartaba los archivos elegidos (Import
+  queda montada oculta + «Volver» regresa al origen real); (4) re-elegir el MISMO video
+  en el Player no disparaba `change` en móvil (reset de `value`, como 002-A); (5) B2:
+  botón de pantalla completa del CONTENEDOR en overlay (el dual sigue visible; oculto en
+  iPhone sin API). Import simplificado: sin "Traducir a" (se elige al traducir) y dos
+  sidecars del mismo idioma son válidos (dos versiones). **Sin dependencias nuevas.**
+  **102/102 tests verdes, build OK** (tsc estricto). Verificado en navegador (preview
+  360px y horizontal): import dual → dropdowns → mock JA → 2ª traducción ES (`es-2`) →
+  recarga → biblioteca "EN · ES · JA" → reabrir con vista+offset restaurados; combinar
+  con rejillas distintas avisa sin romper; consola limpia. Spec en
+  `specs/007-multi-track-subtitles/`. **Pendiente**: validar 004/005/007 en teléfono real.
+
 ## En curso
 - **Validación en teléfono (004 + 005)**: 004 US1–US4 (recarga, biblioteca, video opt-in,
   derivar par) y 005 ASR con clave real (Groq/OpenAI) + clip corto. Ver

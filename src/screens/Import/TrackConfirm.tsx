@@ -1,12 +1,12 @@
 /**
  * Confirmación de pistas antes de abrir el Player. Por cada sidecar: idioma
- * propuesto (editable) y, con dos pistas, cuál es la principal (origen, arriba).
- * Con una sola pista, selector "Traducir a:" con opción "Ninguno" (D7).
- * Spec: specs/002-import-sidecar-subs (US2, US3, FR-008) · contracts/import-flow.md
+ * propuesto (editable) y, con dos pistas, cuál es la principal (maestra: fija
+ * el timing). Dos pistas del MISMO idioma son válidas (dos versiones, spec 007).
+ * El idioma destino de traducción se elige después, en el Player.
+ * Spec: specs/002-import-sidecar-subs (US2, US3) · specs/007-multi-track.
  */
 import { LANG_CODES, type LangCode } from '../../core/models'
-
-export type TargetChoice = LangCode | 'none'
+import { LANG_LABEL } from '../shared/langLabels'
 
 export interface TrackInfo {
   filename: string
@@ -15,35 +15,24 @@ export interface TrackInfo {
   role: 'source' | 'target'
 }
 
-const LANG_LABEL: Record<LangCode, string> = {
-  en: 'Inglés',
-  es: 'Español',
-  ja: 'Japonés',
-}
-
 interface TrackConfirmProps {
   tracks: TrackInfo[]
-  targetChoice: TargetChoice
   error: string | null
   canOpen: boolean
   onLangChange: (index: number, lang: LangCode) => void
   onMakeSource: (index: number) => void
-  onTargetChoiceChange: (choice: TargetChoice) => void
   onOpen: () => void
 }
 
 export default function TrackConfirm({
   tracks,
-  targetChoice,
   error,
   canOpen,
   onLangChange,
   onMakeSource,
-  onTargetChoiceChange,
   onOpen,
 }: TrackConfirmProps) {
   const dual = tracks.length === 2
-  const sourceLang = tracks.find((t) => t.role === 'source')?.lang ?? null
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,29 +69,11 @@ export default function TrackConfirm({
                 checked={t.role === 'source'}
                 onChange={() => onMakeSource(i)}
               />
-              Principal (arriba)
+              Principal (arriba; su timing manda)
             </label>
           )}
         </div>
       ))}
-
-      {!dual && (
-        <label className="flex items-center justify-between gap-2 text-sm">
-          <span className="text-neutral-400">Traducir a</span>
-          <select
-            value={targetChoice}
-            onChange={(e) => onTargetChoiceChange(e.target.value as TargetChoice)}
-            className="rounded bg-neutral-800 px-2 py-1 text-neutral-100"
-          >
-            <option value="none">Ninguno por ahora</option>
-            {LANG_CODES.filter((l) => l !== sourceLang).map((l) => (
-              <option key={l} value={l}>
-                {LANG_LABEL[l]}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

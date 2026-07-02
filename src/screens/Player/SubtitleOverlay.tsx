@@ -8,12 +8,14 @@ import { usePlayerStore } from '../../state/playerStore'
 
 export default function SubtitleOverlay() {
   const doc = usePlayerStore((s) => s.doc)
+  const topId = usePlayerStore((s) => s.topId)
+  const bottomId = usePlayerStore((s) => s.bottomId)
   const activeIndex = usePlayerStore((s) => s.activeIndex)
 
   if (activeIndex < 0) return null // sin segmento activo → overlay vacío
   const seg = doc.segments[activeIndex]
-  const source = seg.texts[doc.sourceLang]
-  const target = seg.texts[doc.targetLang]
+  const source = seg.texts[topId]
+  const target = bottomId !== null ? seg.texts[bottomId] : undefined
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 px-4 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] text-center">

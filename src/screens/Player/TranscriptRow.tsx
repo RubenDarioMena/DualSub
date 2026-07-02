@@ -1,27 +1,28 @@
 /**
- * Una fila de diálogo: origen + destino. Solo origen si falta traducción (FR-007).
- * `memo` + `forwardRef`: solo se re-renderiza la fila cuyo `isActive` cambia, y la
- * activa expone su ref para el autoscroll. Spec: specs/001-player-dual-mock.
+ * Una fila de diálogo: pista de arriba + pista de abajo (spec 007). Solo arriba
+ * si falta la de abajo (FR-007). `memo` + `forwardRef`: solo se re-renderiza la
+ * fila cuyo `isActive` cambia, y la activa expone su ref para el autoscroll.
+ * Spec: specs/001-player-dual-mock.
  */
 import { forwardRef, memo } from 'react'
-import type { LangCode, SubtitleSegment } from '../../core/models'
+import type { SubtitleSegment } from '../../core/models'
 
 interface TranscriptRowProps {
   segment: SubtitleSegment
   index: number
-  sourceLang: LangCode
-  targetLang: LangCode
+  topId: string
+  bottomId: string | null
   isActive: boolean
   onSelect: (index: number) => void
 }
 
 const TranscriptRow = forwardRef<HTMLButtonElement, TranscriptRowProps>(
   function TranscriptRow(
-    { segment, index, sourceLang, targetLang, isActive, onSelect },
+    { segment, index, topId, bottomId, isActive, onSelect },
     ref,
   ) {
-    const source = segment.texts[sourceLang]
-    const target = segment.texts[targetLang]
+    const top = segment.texts[topId]
+    const bottom = bottomId !== null ? segment.texts[bottomId] : undefined
 
     return (
       <button
@@ -41,11 +42,11 @@ const TranscriptRow = forwardRef<HTMLButtonElement, TranscriptRowProps>(
             isActive ? 'font-medium text-white' : 'text-neutral-200',
           ].join(' ')}
         >
-          {source}
+          {top}
         </p>
-        {target && (
+        {bottom && (
           <p className="mt-0.5 text-sm leading-snug break-words text-neutral-400 [overflow-wrap:anywhere]">
-            {target}
+            {bottom}
           </p>
         )}
       </button>

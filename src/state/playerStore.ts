@@ -5,6 +5,7 @@
  */
 import { create } from 'zustand'
 import type { DualSubDocument } from '../core/models'
+import { resolveView, type TrackView } from '../core/tracks'
 import type { MediaRef } from '../core/services/projectStore'
 import { getMockDualSubDocument } from '../engines/mock/mockDocument'
 
@@ -36,6 +37,8 @@ export type Screen = 'import' | 'player' | 'settings' | 'diagnostics' | 'library
 interface PlayerState {
   /** Pantalla activa: arranca en Import hasta que un import válido abre el Player. */
   screen: Screen
+  /** Desde dónde se entró a Settings, para que «Volver» regrese ahí (spec 007). */
+  returnScreen: Screen | null
   /** Object URL del video local; `null` antes de elegir. */
   mediaUrl: string | null
   /** Identidad del archivo de video (nombre/tamaño) para persistencia (spec 004). */
@@ -47,6 +50,10 @@ interface PlayerState {
   mediaBlob: Blob | null
   /** Documento dual activo (mock al inicio; reemplazado por `loadProject`). */
   doc: DualSubDocument
+  /** Pista mostrada arriba (spec 007). Siempre existe en `doc.tracks`. */
+  topId: string
+  /** Pista mostrada abajo, o `null` para "solo arriba" (spec 007). */
+  bottomId: string | null
   /** Id del proyecto persistido; `null` mientras está el mock inicial (spec 004). */
   projectId: string | null
   /** Desfase de sincronización en ms (±). No muta `doc`. */
@@ -73,7 +80,16 @@ interface PlayerState {
     positionMs?: number
     mediaRef?: MediaRef | null
     mediaBlob?: Blob | null
+    view?: TrackView | null
   }) => void
+  /**
+   * Reemplaza SOLO el documento (p. ej. tras traducir): conserva posición,
+   * offset, reproducción y video; la vista se re-valida contra las pistas
+   * nuevas. Nada "se reinicia" (spec 007, fix del reset de 003).
+   */
+  updateDoc: (doc: DualSubDocument) => void
+  /** Elige qué pista va arriba y cuál abajo (dropdowns, spec 007). */
+  setView: (top: string, bottom: string | null) => void
   /** Cambia la pantalla activa (navegación sin router; spec 003 D9). */
   setScreen: (s: Screen) => void
   setMedia: (url: string | null, ref?: MediaRef | null, blob?: Blob | null) => void
@@ -88,12 +104,18 @@ interface PlayerState {
   clearSeek: () => void
 }
 
+const initialDoc = getMockDualSubDocument()
+const initialView = resolveView(initialDoc)
+
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   screen: 'import',
+  returnScreen: null,
   mediaUrl: null,
   mediaRef: null,
   mediaBlob: null,
-  doc: getMockDualSubDocument(),
+  doc: initialDoc,
+  topId: initialView.top,
+  bottomId: initialView.bottom,
   projectId: null,
   offsetMs: 0,
   positionMs: 0,
@@ -103,11 +125,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   seekRequestMs: null,
 
   // Reemplaza el documento y el video por los del proyecto y abre el Player.
-  loadProject: ({ doc, mediaUrl, projectId, offsetMs = 0, positionMs = 0, mediaRef, mediaBlob }) => {
+  loadProject: ({ doc, mediaUrl, projectId, offsetMs = 0, positionMs = 0, mediaRef, mediaBlob, view }) => {
     const prev = get().mediaUrl
     if (prev && prev !== mediaUrl) URL.revokeObjectURL(prev)
+    const v = resolveView(doc, view)
     set({
       doc,
+      topId: v.top,
+      bottomId: v.bottom,
       mediaUrl,
       mediaRef: mediaRef ?? (mediaUrl ? get().mediaRef : null),
       // Al continuar un proyecto sin pasar blob (p. ej. traducir) conserva el actual;
@@ -122,7 +147,24 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       isPlaying: false,
     })
   },
-  setScreen: (s) => set({ screen: s }),
+  updateDoc: (doc) => {
+    const v = resolveView(doc, { top: get().topId, bottom: get().bottomId })
+    set({ doc, topId: v.top, bottomId: v.bottom })
+  },
+  setView: (top, bottom) => {
+    const v = resolveView(get().doc, { top, bottom })
+    set({ topId: v.top, bottomId: v.bottom })
+  },
+  // Al entrar a Settings se recuerda el origen (Diagnóstico no lo pisa: se llega
+  // desde Settings y su «Volver» regresa a Settings).
+  setScreen: (s) => {
+    const cur = get().screen
+    if (s === 'settings' && cur !== 'settings' && cur !== 'diagnostics') {
+      set({ screen: s, returnScreen: cur })
+    } else {
+      set({ screen: s })
+    }
+  },
   // C3: revoca el object URL previo exactamente una vez al reemplazarlo.
   setMedia: (url, ref, blob) => {
     const prev = get().mediaUrl

@@ -13,23 +13,21 @@ const base: TranscriptionResult = {
 }
 
 describe('buildFromTranscript (005)', () => {
-  it('construye un documento solo-origen válido con tiempos intactos', () => {
+  it('construye un documento de una sola pista válido con tiempos intactos', () => {
     const doc = buildFromTranscript(base)
-    expect(doc.sourceLang).toBe('en')
+    expect(doc.masterId).toBe('en')
+    expect(doc.tracks).toEqual([{ id: 'en', lang: 'en', origin: 'asr' }])
     expect(doc.segments).toHaveLength(3)
     expect(doc.segments[0]).toEqual({ startMs: 0, endMs: 1200, texts: { en: 'Hello there.' } })
     expect(doc.meta?.source).toBe('api-pipeline')
     expect(() => validateDocument(doc)).not.toThrow()
   })
 
-  it('usa un targetLang placeholder distinto del origen cuando se omite', () => {
-    expect(buildFromTranscript(base).targetLang).not.toBe('en')
-  })
-
-  it('respeta el targetLang elegido (preparado para traducir, 003)', () => {
-    const doc = buildFromTranscript(base, 'es')
-    expect(doc.targetLang).toBe('es')
-    expect(doc.segments[0].texts.es).toBeUndefined()
+  it('la transcripción es la pista MAESTRA y lleva la etiqueta del proveedor', () => {
+    const doc = buildFromTranscript(base, 'Whisper · Groq')
+    expect(doc.masterId).toBe('en')
+    expect(doc.tracks[0].label).toBe('Whisper · Groq')
+    expect(doc.tracks[0].origin).toBe('asr')
   })
 
   it('descarta segmentos vacíos y recorta el texto', () => {

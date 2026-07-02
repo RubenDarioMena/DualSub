@@ -44,21 +44,25 @@ pnpm dev / pnpm test / pnpm test:watch / pnpm build / pnpm preview
 ## Convenciones
 - Tiempos en ms enteros (`startMs`/`endMs`), nunca segundos float en core.
 - Idiomas ISO 639-1 (`"en" | "es" | "ja"`).
-- Formato interno DualSub JSON v1; SRT/VTT solo import/export.
+- Formato interno DualSub JSON v2 (multi-pista, spec 007; v1 se migra al
+  parsear); SRT/VTT solo import/export.
 
 <!-- SPECKIT START -->
 ## Spec activa
-- **004 — Persistencia local + biblioteca**: ✅ implementada (US1–US4). Puerto
-  `ProjectStore` (interfaz pura en `src/core/services/`) con adaptadores en
-  `src/engines/storage/` (`idbProjectStore` IndexedDB + `memoryProjectStore` fallback
-  FR-012); lógica pura `combineByPivot`/`selectPair` en `src/core/project/` (tests en
-  `tests/core/combine.test.ts`). Modo ligero por defecto + interruptor
-  `saveVideoInBrowser` (degrada ante cuota). `libraryStore` + `LibraryScreen`. Pendiente:
-  checklist en teléfono real (T023).
-- **005 — Pipeline ASR (audio → texto con tiempos)**: ✅ núcleo. Interfaz pura
-  `Transcriber` (`src/core/services/transcriber.ts`) + conversión `buildFromTranscript`
-  (`src/core/transcription/`, tests). Engines `mockTranscriber` + `whisperAdapter`
-  (Groq `whisper-large-v3-turbo` reusando la clave Groq + OpenAI `whisper-1`); UI
-  `TranscribePanel` en Import. Sin dependencias nuevas. Pendiente: validar con clave real
-  en teléfono. Siguiente roadmap: **006 — YouTube (Camino A)**.
+- **007 — Multi-pista (DualSub v2) + UX**: ✅ implementada 2026-07-01. Formato v2:
+  `masterId` + `tracks[]` ({id, lang, label?, origin?}), `texts` por id de pista
+  (`"es"`, `"es-2"`…). La transcripción/pista principal es la MAESTRA del timing y
+  la traducción SIEMPRE parte de ella; varias traducciones por idioma; dropdowns
+  Arriba/Abajo (`TrackSelector`; vista persistida en `StoredProject.view`).
+  Migración v1→v2 automática en `validateDocument`. Helpers puros en
+  `src/core/tracks.ts`. Fixes UX: traducir no resetea posición/offset
+  (`updateDoc`), lo parcial se conserva en la pista, Import sobrevive a Settings
+  (`returnScreen`), reset del input de video, fullscreen del contenedor (B2).
+  102/102 tests, build OK. Pendiente: validar 004/005/007 en teléfono real.
+- **004 — Persistencia local + biblioteca**: ✅ (US1–US4). Con la 007,
+  `StoredProjectMeta.langs[]` y `combineProjects` (multi-pista, sin `selectPair`).
+  Pendiente: checklist en teléfono real (T023).
+- **005 — Pipeline ASR**: ✅ núcleo (Groq `whisper-large-v3-turbo` + OpenAI
+  `whisper-1`; `TranscribePanel` en Import). Pendiente: validar con clave real en
+  teléfono. Siguiente roadmap: **006 — YouTube (Camino A)**.
 <!-- SPECKIT END -->

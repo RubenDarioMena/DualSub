@@ -110,12 +110,13 @@ export default function LibraryScreen() {
 }
 
 /**
- * Combinar idiomas (US4): a partir de dos proyectos del MISMO video que comparten el
- * inglés base (p. ej. EN→ES y EN→JA), deriva el par cruzado (ES→JA) al instante, sin
- * traducir y con tiempos intactos. Si no comparten esqueleto, avisa sin tocar nada.
+ * Combinar proyectos (US4, reformulado en spec 007): dos proyectos del MISMO
+ * video que comparten el idioma base se unen en UN proyecto multi-pista (p. ej.
+ * EN/ES + EN/JA → EN/ES/JA), al instante, sin traducir y con tiempos intactos.
+ * Después eliges qué par ver con los menús Arriba/Abajo del Player.
  */
 function CombineSection({ projects }: { projects: StoredProjectMeta[] }) {
-  const derivePair = useLibraryStore((s) => s.derivePair)
+  const combineProjects = useLibraryStore((s) => s.combineProjects)
   const [open, setOpen] = useState(false)
   const [idA, setIdA] = useState(projects[0].id)
   const [idB, setIdB] = useState(projects[1].id)
@@ -123,16 +124,12 @@ function CombineSection({ projects }: { projects: StoredProjectMeta[] }) {
 
   const a = projects.find((p) => p.id === idA)
   const b = projects.find((p) => p.id === idB)
-  // El par derivado: el destino de A como nuevo origen, el destino de B como destino.
-  const source = a?.targetLang
-  const target = b?.targetLang
-  const canCombine =
-    !!a && !!b && idA !== idB && !!source && !!target && source !== target
+  const canCombine = !!a && !!b && idA !== idB
 
   const onCombine = async () => {
-    if (!canCombine || !source || !target) return
+    if (!canCombine) return
     setError(null)
-    const ok = await derivePair(idA, idB, source, target)
+    const ok = await combineProjects(idA, idB)
     if (!ok) {
       setError(
         'Esos dos proyectos no comparten el mismo idioma base ni la misma rejilla de ' +
@@ -156,17 +153,19 @@ function CombineSection({ projects }: { projects: StoredProjectMeta[] }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-3">
       <p className="text-xs text-neutral-400">
-        Combina dos proyectos del mismo video que comparten el idioma base para ver el
-        par cruzado, sin volver a traducir.
+        Combina dos proyectos del mismo video que comparten el idioma base: el resultado
+        tendrá TODAS sus pistas, sin volver a traducir. El par a ver se elige en el
+        Player (menús Arriba/Abajo).
       </p>
       <ProjectSelect label="Proyecto A" value={idA} projects={projects} onChange={setIdA} />
       <ProjectSelect label="Proyecto B" value={idB} projects={projects} onChange={setIdB} />
       <p className="text-xs text-neutral-500">
-        Se creará el par{' '}
+        Se creará un proyecto con{' '}
         <span className="font-medium text-neutral-300">
-          {source?.toUpperCase() ?? '—'} → {target?.toUpperCase() ?? '—'}
+          {[...new Set([...(a?.langs ?? []), ...(b?.langs ?? [])])]
+            .map((l) => l.toUpperCase())
+            .join(' + ') || '—'}
         </span>
-        {source && target && source === target && ' (elige idiomas distintos)'}
       </p>
       {error && <p className="text-xs text-rose-400">{error}</p>}
       <div className="flex gap-2">
@@ -214,7 +213,7 @@ function ProjectSelect({
       >
         {projects.map((p) => (
           <option key={p.id} value={p.id}>
-            {p.title} ({p.sourceLang.toUpperCase()}→{p.targetLang.toUpperCase()})
+            {p.title} ({p.langs.map((l) => l.toUpperCase()).join('·')})
           </option>
         ))}
       </select>
@@ -245,7 +244,7 @@ function ProjectRow({
           {p.hasVideo && <span title="Video guardado">🎬</span>}
         </div>
         <div className="mt-0.5 text-xs text-neutral-500">
-          {p.sourceLang.toUpperCase()} → {p.targetLang.toUpperCase()} · {formatDate(p.updatedAt)} ·{' '}
+          {p.langs.map((l) => l.toUpperCase()).join(' · ')} · {formatDate(p.updatedAt)} ·{' '}
           {formatBytes(p.sizeBytes)}
         </div>
       </button>

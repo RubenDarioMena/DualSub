@@ -19,12 +19,10 @@ interface Entry {
 const store = new Map<string, Entry>()
 
 function collectLangs(project: StoredProject): LangCode[] {
-  const seen = new Set<LangCode>()
-  for (const seg of project.doc.segments) {
-    for (const lang of Object.keys(seg.texts) as LangCode[]) {
-      if (seg.texts[lang] != null) seen.add(lang)
-    }
-  }
+  const doc = project.doc
+  const master = doc.tracks.find((t) => t.id === doc.masterId) ?? doc.tracks[0]
+  const seen = new Set<LangCode>([master.lang])
+  for (const t of doc.tracks) seen.add(t.lang)
   return [...seen]
 }
 
@@ -33,9 +31,7 @@ function toMeta(p: StoredProject): StoredProjectMeta {
   return {
     id: p.id,
     title: p.title,
-    sourceLang: p.doc.sourceLang,
-    targetLang: p.doc.targetLang,
-    availableLangs: collectLangs(p),
+    langs: collectLangs(p),
     storageMode: p.storageMode,
     hasVideo,
     sizeBytes: JSON.stringify(p.doc).length + (hasVideo ? p.media.sizeBytes : 0),
