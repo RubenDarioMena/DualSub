@@ -66,6 +66,11 @@ interface PlayerState {
   viewMode: ViewMode
   /** Petición de seek pendiente (ms de video) que `VideoStage` aplica y limpia. */
   seekRequestMs: number | null
+  /**
+   * Índice del segmento en bucle (repite `[startMs, endMs)` del segmento), o
+   * `null` sin bucle. Estado efímero de runtime; no se persiste.
+   */
+  loopIndex: number | null
 
   /**
    * Carga un proyecto y abre el Player. Sin `projectId` se trata como proyecto
@@ -102,6 +107,10 @@ interface PlayerState {
   setViewMode: (mode: ViewMode) => void
   requestSeek: (videoMs: number) => void
   clearSeek: () => void
+  /** Activa/desactiva el bucle sobre un segmento (mismo índice ⇒ lo apaga). */
+  toggleLoop: (index: number) => void
+  /** Fija el segmento en bucle, o `null` para quitarlo. */
+  setLoop: (index: number | null) => void
 }
 
 const initialDoc = getMockDualSubDocument()
@@ -123,6 +132,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   activeIndex: -1,
   viewMode: 'list',
   seekRequestMs: null,
+  loopIndex: null,
 
   // Reemplaza el documento y el video por los del proyecto y abre el Player.
   loadProject: ({ doc, mediaUrl, projectId, offsetMs = 0, positionMs = 0, mediaRef, mediaBlob, view }) => {
@@ -145,6 +155,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       positionMs,
       activeIndex: -1,
       isPlaying: false,
+      loopIndex: null,
     })
   },
   updateDoc: (doc) => {
@@ -175,6 +186,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       mediaBlob: blob !== undefined ? blob : get().mediaBlob,
       isPlaying: false,
       activeIndex: -1,
+      loopIndex: null,
     })
   },
   setPosition: (ms) => set({ positionMs: Math.max(0, Math.round(ms)) }),
@@ -189,4 +201,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   // C2: nunca deja un seek negativo.
   requestSeek: (videoMs) => set({ seekRequestMs: Math.max(0, videoMs) }),
   clearSeek: () => set({ seekRequestMs: null }),
+  toggleLoop: (index) => set((s) => ({ loopIndex: s.loopIndex === index ? null : index })),
+  setLoop: (index) => set({ loopIndex: index }),
 }))

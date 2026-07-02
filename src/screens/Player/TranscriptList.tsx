@@ -12,6 +12,8 @@ export default function TranscriptList() {
   const topId = usePlayerStore((s) => s.topId)
   const bottomId = usePlayerStore((s) => s.bottomId)
   const activeIndex = usePlayerStore((s) => s.activeIndex)
+  const loopIndex = usePlayerStore((s) => s.loopIndex)
+  const toggleLoop = usePlayerStore((s) => s.toggleLoop)
   const requestSeek = usePlayerStore((s) => s.requestSeek)
   const activeRef = useRef<HTMLButtonElement>(null)
 
@@ -42,7 +44,9 @@ export default function TranscriptList() {
             topId={topId}
             bottomId={bottomId}
             isActive={i === activeIndex}
+            isLooping={i === loopIndex}
             onSelect={onSelect}
+            onToggleLoop={toggleLoop}
           />
         </li>
       ))}

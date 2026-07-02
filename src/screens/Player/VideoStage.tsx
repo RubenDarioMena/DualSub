@@ -14,6 +14,7 @@ export default function VideoStage() {
   const mediaUrl = usePlayerStore((s) => s.mediaUrl)
   const seekRequestMs = usePlayerStore((s) => s.seekRequestMs)
   const offsetMs = usePlayerStore((s) => s.offsetMs)
+  const loopIndex = usePlayerStore((s) => s.loopIndex)
 
   // Reloj maestro: rAF mientras reproduce; una actualización puntual al pausar
   // o tras un seek (para que el highlight responda también en pausa).
@@ -36,7 +37,18 @@ export default function VideoStage() {
       lastPosWrite = now
       usePlayerStore.getState().setPosition(Math.round(video.currentTime * 1000))
     }
+    // Bucle A-B: al alcanzar el fin del segmento marcado, vuelve a su inicio
+    // (tiempos de video = tiempos del segmento + offset). No hace nada sin bucle.
+    const enforceLoop = () => {
+      const { loopIndex, doc, offsetMs } = usePlayerStore.getState()
+      if (loopIndex == null) return
+      const seg = doc.segments[loopIndex]
+      if (seg && video.currentTime * 1000 >= seg.endMs + offsetMs) {
+        video.currentTime = Math.max(0, (seg.startMs + offsetMs) / 1000)
+      }
+    }
     const loop = () => {
+      enforceLoop()
       computeOnce()
       reportPosition()
       raf = requestAnimationFrame(loop)
@@ -85,6 +97,20 @@ export default function VideoStage() {
     const tMs = Math.round(video.currentTime * 1000)
     setActiveIndex(findActiveSegmentIndex(doc.segments, tMs - offsetMs))
   }, [offsetMs])
+
+  // Al activar un bucle, salta al inicio del segmento y reproduce; el corte por
+  // el final lo hace `enforceLoop` en el bucle rAF. Al apagarlo (null) no toca nada.
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || loopIndex == null) return
+    const { doc, offsetMs } = usePlayerStore.getState()
+    const seg = doc.segments[loopIndex]
+    if (!seg) return
+    video.currentTime = Math.max(0, (seg.startMs + offsetMs) / 1000)
+    void video.play().catch(() => {
+      // Si el navegador bloquea el autoplay, el bucle empieza al dar a play.
+    })
+  }, [loopIndex])
 
   // Consume una petición de seek (R3): coloca el tiempo de video y la limpia.
   // El evento `seeked` recalculará el segmento activo.
