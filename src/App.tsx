@@ -6,6 +6,7 @@ import PlayerScreen from './screens/Player/PlayerScreen'
 import SettingsScreen from './screens/Settings/SettingsScreen'
 import DiagnosticsScreen from './screens/Diagnostics/DiagnosticsScreen'
 import LibraryScreen from './screens/Library/LibraryScreen'
+import YouTubeScreen from './screens/YouTube/YouTubeScreen'
 
 export default function App() {
   const screen = usePlayerStore((s) => s.screen)
@@ -26,6 +27,7 @@ export default function App() {
       {screen === 'settings' && <SettingsScreen />}
       {screen === 'diagnostics' && <DiagnosticsScreen />}
       {screen === 'library' && <LibraryScreen />}
+      {screen === 'youtube' && <YouTubeScreen /> /* experimental (pre-006) */}
       {screen === 'player' && <PlayerScreen />}
       {keepImport && (
         <div hidden={screen !== 'import'}>

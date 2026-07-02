@@ -32,7 +32,7 @@ function newId(): string {
 }
 
 /** Pantalla activa de la app (sin router; spec 002 D10, spec 003 D9, spec 004). */
-export type Screen = 'import' | 'player' | 'settings' | 'diagnostics' | 'library'
+export type Screen = 'import' | 'player' | 'settings' | 'diagnostics' | 'library' | 'youtube'
 
 interface PlayerState {
   /** Pantalla activa: arranca en Import hasta que un import válido abre el Player. */

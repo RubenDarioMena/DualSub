@@ -18,6 +18,7 @@ import TranscriptList from './TranscriptList'
 import OffsetControl from './OffsetControl'
 import TranslatePanel from './TranslatePanel'
 import TrackSelector from './TrackSelector'
+import ExportPanel from './ExportPanel'
 
 export default function PlayerScreen() {
   const mediaUrl = usePlayerStore((s) => s.mediaUrl)
@@ -30,6 +31,8 @@ export default function PlayerScreen() {
   const setViewMode = usePlayerStore((s) => s.setViewMode)
   const setScreen = usePlayerStore((s) => s.setScreen)
   const stageRef = useRef<HTMLDivElement>(null)
+  // Lista completa: oculta el video (sin desmontarlo) para leer todo el diálogo.
+  const [expanded, setExpanded] = useState(false)
 
   // El modo por defecto sigue la orientación; el override manual gana hasta el
   // próximo cambio de orientación (el listener solo dispara entonces).
@@ -86,7 +89,13 @@ export default function PlayerScreen() {
           También es el objetivo de pantalla completa (overlay incluido). */}
       <div
         ref={stageRef}
-        className={overlay ? 'relative flex-1 bg-black' : 'relative aspect-video shrink-0 bg-black'}
+        className={
+          overlay
+            ? 'relative flex-1 bg-black'
+            : expanded
+              ? 'hidden' // lista completa: el video sigue montado (el audio no se corta)
+              : 'relative aspect-video shrink-0 bg-black'
+        }
       >
         <VideoStage />
         {overlay && <SubtitleOverlay />}
@@ -132,10 +141,21 @@ export default function PlayerScreen() {
       <div className={overlay ? 'hidden' : 'flex min-h-0 flex-1 flex-col'}>
         <div className="flex shrink-0 flex-col gap-2 border-b border-neutral-800 px-2 py-2">
           <TrackSelector />
-          <OffsetControl />
+          <div className="flex items-center justify-between gap-2">
+            <OffsetControl />
+            <button
+              type="button"
+              onClick={() => setExpanded((e) => !e)}
+              aria-label={expanded ? 'Mostrar el video' : 'Desplegar la lista completa'}
+              className="shrink-0 rounded-full border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 active:bg-neutral-800"
+            >
+              {expanded ? '▾ Video' : '▴ Lista completa'}
+            </button>
+          </div>
         </div>
-        <div className="shrink-0 px-2 pt-2">
+        <div className="flex shrink-0 flex-col gap-2 px-2 pt-2">
           <TranslatePanel />
+          <ExportPanel />
         </div>
         <TranscriptList />
       </div>

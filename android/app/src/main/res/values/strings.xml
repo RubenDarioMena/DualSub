@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DualSub</string>
+    <string name="title_activity_main">DualSub</string>
+    <string name="package_name">app.dualsub.rdm</string>
+    <string name="custom_url_scheme">app.dualsub.rdm</string>
+</resources>

@@ -13,9 +13,12 @@ import {
   type Transcriber,
   type TranscriberId,
 } from '../../core/services/transcriber'
+import type { AudioExtractor } from '../../core/services/audioExtractor'
 import { mockTranslator } from '../mock/mockTranslator'
 import { mockTranscriber } from '../mock/mockTranscriber'
+import { mockAudioExtractor } from '../mock/mockAudioExtractor'
 import { groqTranscriber, openaiTranscriber } from './whisperAdapter'
+import { ffmpegAudioExtractor } from './ffmpegAudioExtractor'
 import { groqTranslator } from './groq'
 import { openaiTranslator } from './openai'
 import { deepseekTranslator } from './deepseek'
@@ -86,4 +89,16 @@ export function getTranscriber(provider: TranscriberId): Transcriber {
     default:
       return unavailableTranscriber
   }
+}
+
+/** Modo de extracción de audio (spec 008): `mock` en demo, `ffmpeg` (wasm) en real. */
+export type AudioExtractorMode = 'ffmpeg' | 'mock'
+
+/**
+ * Devuelve el `AudioExtractor` del modo dado. `mock` no carga wasm (demo/tests de UI);
+ * `ffmpeg` usa ffmpeg.wasm monohilo. Un futuro `native` (Capacitor) se añade aquí sin
+ * tocar el pipeline ni la UI.
+ */
+export function getAudioExtractor(mode: AudioExtractorMode): AudioExtractor {
+  return mode === 'mock' ? mockAudioExtractor : ffmpegAudioExtractor
 }

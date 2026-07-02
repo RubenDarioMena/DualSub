@@ -57,6 +57,14 @@ export default function LibraryScreen() {
         ＋ Nuevo proyecto
       </button>
 
+      <button
+        type="button"
+        onClick={() => setScreen('youtube')}
+        className="rounded-full border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 active:bg-neutral-800"
+      >
+        ▶ YouTube con tus subtítulos (beta)
+      </button>
+
       {!available && (
         <p className="rounded-lg border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-xs text-amber-300">
           Tu navegador no guardará el trabajo (modo privado o almacenamiento
@@ -271,9 +279,10 @@ function ProjectRow({
           type="button"
           onClick={onAskDelete}
           aria-label={`Borrar ${p.title}`}
-          className="shrink-0 rounded-full border border-neutral-700 px-3 py-2 text-xs text-neutral-300 active:bg-neutral-800"
+          title="Borrar proyecto"
+          className="shrink-0 rounded-full border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-400 active:bg-red-950 active:text-red-300"
         >
-          🗑
+          ✕
         </button>
       )}
     </li>

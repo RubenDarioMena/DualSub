@@ -4,14 +4,32 @@
     {
       "name": "dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev"],
+      "runtimeArgs": [
+        "dev"
+      ],
       "port": 5173
     },
     {
       "name": "verify",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev", "--port", "5199", "--strictPort"],
+      "runtimeArgs": [
+        "dev",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
       "port": 5199
+    },
+    {
+      "name": "prod-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "preview",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
+      "port": 4173
     }
   ]
 }

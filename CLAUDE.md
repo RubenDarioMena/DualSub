@@ -49,6 +49,20 @@ pnpm dev / pnpm test / pnpm test:watch / pnpm build / pnpm preview
 
 <!-- SPECKIT START -->
 ## Spec activa
+- **009 — Export .mp4 + Android + YouTube beta**: ✅ núcleo 2026-07-02.
+  (a) Export: `core/export/subtitleExport.ts` (par visible + offset → .srt, tests)
+  + `engines/api/ffmpegVideoExporter.ts` (modo «pista» mov_text `-c copy` rápido;
+  «quemado» beta) + `ExportPanel` en Player; ffmpeg.wasm compartido con la 008 vía
+  `engines/api/ffmpegRuntime.ts`. (b) **Capacitor Android**: APK cáscara →
+  `https://dualsub-rdm.netlify.app` (se actualiza con cada push); build e
+  instalación en `docs/ANDROID.md`; `android/` versionado, `local.properties` no.
+  (c) **YouTube beta** (pre-006): `screens/YouTube/` con IFrame API como reloj +
+  subtítulos del proyecto abierto (sin proxy de captions aún). (d) Toggle «Lista
+  completa» en Player. Pendiente: validar APK y export en teléfono real.
+- **008 — ASR videos grandes/largos** (amplía 005): ✅ implementada (pipeline
+  extraer→trocear→transcribir→re-ensamblar con ffmpeg.wasm monohilo, progreso k/N,
+  confirmación N>3, reintento por parte; tests en `chunkPlan`/`mergeChunks`/
+  `pipeline`). Pendiente: validar con clave real y video grande en teléfono.
 - **007 — Multi-pista (DualSub v2) + UX**: ✅ implementada 2026-07-01. Formato v2:
   `masterId` + `tracks[]` ({id, lang, label?, origin?}), `texts` por id de pista
   (`"es"`, `"es-2"`…). La transcripción/pista principal es la MAESTRA del timing y

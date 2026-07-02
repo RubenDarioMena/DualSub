@@ -3,6 +3,23 @@
 > Estado vivo del proyecto. Leer al iniciar sesión, actualizar al cerrar.
 
 ## Hecho
+- **2026-07-02** — **Spec 008 — ASR videos grandes/largos (extracción + troceo)**:
+  el pipeline ya NO sube el video entero. Extrae SIEMPRE el audio del cliente
+  (ffmpeg.wasm monohilo → mp3 mono 16 kHz), trocea por tiempo si excede el margen
+  (`SINGLE_MAX_BYTES=24MB`, `TARGET_CHUNK_BYTES=20MB`, solape 2 s), transcribe cada
+  parte y re-ensambla tiempos continuos de-duplicando el solape. Puro y testeado en
+  `src/core/transcription/` (`chunkPlan`, `mergeChunks`, orquestador `pipeline.ts`
+  reanudable); interfaz `AudioExtractor` (`core/services`) intercambiable con
+  `ffmpegAudioExtractor` + `mockAudioExtractor` + factory `getAudioExtractor`
+  (`engines/api`). `TranscribePanel` refactorizado: progreso k/N, confirmación si
+  N>3 (FR-013), reintento por parte sin perder lo hecho (FR-007), errores tipados.
+  Reutiliza `whisperAdapter` para cada parte. Dep nueva ffmpeg.wasm (DECISIONS.md).
+  **117/117 tests, build OK.** Flujo mock verificado en preview (Import→Transcribir
+  →Player). Pendiente: T021 checklist en teléfono real (clave + video largo).
+- **2026-07-02** — **UX Player + Biblioteca**: botones ↻ (bucle del segmento) y ⧉
+  (copiar el subtítulo de origen) en overlay y en filas de la lista
+  (`subtitleControls.tsx`, `clipboard.ts` con fallback contexto no seguro); bucle en
+  `playerStore`/`VideoStage`. Botón de borrar de la Biblioteca ahora es una ✕ clara.
 - **2026-06-12** — Fundación del repo: GitHub Spec Kit (integración Claude) +
   constitución derivada del framework de trabajo. Scaffold Vite + React 19 + TS
   estricto + Tailwind v4 + Zustand + Vitest. `pnpm test` y `pnpm build` verdes.
@@ -67,6 +84,23 @@
   recarga → biblioteca "EN · ES · JA" → reabrir con vista+offset restaurados; combinar
   con rejillas distintas avisa sin romper; consola limpia. Spec en
   `specs/007-multi-track-subtitles/`. **Pendiente**: validar 004/005/007 en teléfono real.
+
+
+## Hecho (2026-07-02)
+- **Spec 009 (núcleo) — Export .mp4 + Android (Capacitor) + YouTube beta + lista completa**:
+  (a) **Export**: `buildDualSrt` (core puro + 7 tests: par visible Arriba/Abajo en un
+  solo cue, offset aplicado, renumeración) + `ffmpegVideoExporter` (engines; reusa el
+  ffmpeg.wasm de la 008 vía `ffmpegRuntime` compartido) con modo «pista» (`mov_text`,
+  `-c copy`, segundos) y «quemado» (beta; recodifica) + `ExportPanel` en el Player
+  (.mp4 pista / .mp4 quemado / solo .srt). (b) **Capacitor Android**: APK cáscara →
+  `dualsub-rdm.netlify.app` (se actualiza con cada push); compilado OK con OpenJDK 21 +
+  SDK local (`android/app/build/outputs/apk/debug/app-debug.apk`, 4 MB); instrucciones
+  en `docs/ANDROID.md`. (c) **YouTube (beta, pre-006)**: pantalla con IFrame API como
+  reloj + doble subtítulo del proyecto abierto + offset; acceso desde Biblioteca.
+  (d) **Lista completa**: toggle en el Player que oculta el video (sin desmontarlo:
+  el audio sigue) para leer todo el diálogo. **124/124 tests + build OK** (+ verificación
+  en preview: dropdowns, toggle, YouTube iframe, export real con mp4 sintetizado).
+  Verificado en build de producción: export «pista» OK (~4 s con mp4 real 1.1 MB) y «quemado» OK (el core wasm SÍ trae el filtro subtitles). Pendiente: probar APK y descargas del export en teléfono real.
 
 ## En curso
 - **Validación en teléfono (004 + 005)**: 004 US1–US4 (recarga, biblioteca, video opt-in,

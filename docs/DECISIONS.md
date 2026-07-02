@@ -2,6 +2,13 @@
 
 > Log de decisiones. Una línea por decisión, con fecha. Lo más reciente arriba.
 
+- **2026-07-02** — **Dep `@ffmpeg/ffmpeg` + `@ffmpeg/util` (ffmpeg.wasm) — spec 008**.
+  Revierte el "sin extracción de audio" de la 005: ahora se extrae SIEMPRE el audio del
+  video en el cliente (mono 16 kHz mp3) y se trocea por tiempo bajo el límite del proveedor,
+  para transcribir videos largos (26 min+) que antes se rechazaban. Se usa el **core monohilo**
+  (sin `SharedArrayBuffer` → sin cabeceras COOP/COEP en Netlify ni en el WebView de Capacitor).
+  Detrás de la interfaz `AudioExtractor` (core/services) intercambiable (ffmpeg | mock | nativo
+  futuro). Coste: ~10-15 MB de wasm descargados la 1.ª vez (lazy, cacheable).
 - **2026-06-18** — **Spec 005 (ASR) — proveedor Whisper y "sin extracción de audio"**.
   El roadmap decía "Whisper vía OpenRouter", pero **OpenRouter NO ofrece transcripción de
   audio** (es un router de LLM/multimodal de texto), así que se descartó. Se usa **Groq
@@ -91,3 +98,17 @@
 - **2026-07-01** — La traducción parte SIEMPRE de la pista maestra (no de otra
   traducción) y el destino se elige al traducir (dropdown en el Player), no al
   importar: muere el `targetLang` placeholder de la 002.
+- **2026-07-02** — **Capacitor Android** (deps nuevas: `@capacitor/core`,
+  `@capacitor/android`, `@capacitor/cli`): APK cáscara con `server.url` → Netlify
+  (`dualsub-rdm.netlify.app`); se actualiza con cada push sin recompilar. React
+  Native descartado por ahora (reescribir la UI no compensa; se reevalúa si
+  PiP/Chromecast se vuelven centrales). Instrucciones: `docs/ANDROID.md`.
+- **2026-07-02** — **Export .mp4** (spec 009, sin deps nuevas: reusa ffmpeg.wasm de
+  la 008): modo «pista» = mov_text con `-c copy` (segundos, sin pérdida, lo muestran
+  VLC/TVs) por defecto; modo «quemado» experimental (recodifica; si el core wasm no
+  trae el filtro `subtitles`, error honesto). El .srt exporta el par visible con el
+  offset aplicado.
+- **2026-07-02** — **YouTube experimental** (pre-006): pantalla con el IFrame Player
+  API oficial como reloj (rAF + `getCurrentTime`) y los subtítulos del proyecto
+  abierto bajo el iframe (overlay táctil sobre iframe no es fiable). Sin proxy de
+  captions aún; no se descarga nada de YouTube.
