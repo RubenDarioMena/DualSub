@@ -19,29 +19,13 @@ export default function SettingsScreen() {
   // → Biblioteca; si no → Import.
   const back = projectId ? 'player' : hasProjects ? 'library' : 'import'
   const provider = useSettingsStore((s) => s.provider)
-  const keys = useSettingsStore((s) => s.keys)
   const setProvider = useSettingsStore((s) => s.setProvider)
-  const setKey = useSettingsStore((s) => s.setKey)
-  const clearKey = useSettingsStore((s) => s.clearKey)
   const asrProvider = useSettingsStore((s) => s.asrProvider)
   const setAsrProvider = useSettingsStore((s) => s.setAsrProvider)
   const saveVideoInBrowser = useSettingsStore((s) => s.saveVideoInBrowser)
   const setSaveVideoInBrowser = useSettingsStore((s) => s.setSaveVideoInBrowser)
 
   const info = getProviderInfo(provider)
-  // Borrador local del input; se confirma con "Guardar".
-  const [draft, setDraft] = useState('')
-  const savedKey = keys[provider]
-
-  const onSave = () => {
-    if (draft.trim() === '') return
-    setKey(provider, draft.trim())
-    setDraft('')
-  }
-  const onClear = () => {
-    clearKey(provider)
-    setDraft('')
-  }
 
   return (
     <div className="flex min-h-dvh flex-col bg-neutral-950 text-neutral-100">
@@ -96,44 +80,7 @@ export default function SettingsScreen() {
 
         {info.needsKey && (
           <section className="flex flex-col gap-2">
-            <label htmlFor="apikey" className="text-xs font-medium text-neutral-400">
-              API key de {info.label}
-            </label>
-            <input
-              id="apikey"
-              type="password"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder={savedKey ? '•••••••• (guardada)' : 'Pega tu clave'}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600"
-            />
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onSave}
-                disabled={draft.trim() === ''}
-                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white active:bg-sky-700 disabled:bg-neutral-800 disabled:text-neutral-600"
-              >
-                Guardar
-              </button>
-              <button
-                type="button"
-                onClick={onClear}
-                disabled={!savedKey}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-rose-400 active:bg-neutral-800 disabled:text-neutral-700"
-              >
-                Borrar
-              </button>
-              <span className="ml-auto text-xs text-neutral-500">
-                {savedKey ? 'Clave guardada ✓' : 'Sin clave'}
-              </span>
-            </div>
-            <p className="text-xs text-neutral-500">
-              La clave se guarda solo en este dispositivo (localStorage). Nunca se
-              envía a otro sitio salvo a {info.label}.
-            </p>
+            <ApiKeyField providerId={provider} label={info.label} />
           </section>
         )}
 
@@ -155,13 +102,16 @@ export default function SettingsScreen() {
             ))}
           </select>
           <p className="text-xs text-neutral-500">
-            Genera los subtítulos a partir del audio del video. Groq y OpenAI reusan la
-            misma API key que ya pusiste arriba para ese proveedor
-            {asrProvider !== 'mock' && (
-              <> · {keys[asrProvider] ? 'clave detectada ✓' : 'falta la clave de ese proveedor'}</>
-            )}
-            .
+            Genera los subtítulos a partir del audio del video. Groq y OpenAI comparten la
+            misma API key con su proveedor de traducción: si ya la pusiste arriba, vale; si
+            no, pégala aquí.
           </p>
+          {asrProvider !== 'mock' && (
+            <ApiKeyField
+              providerId={asrProvider}
+              label={getProviderInfo(asrProvider).label}
+            />
+          )}
         </section>
 
         {/* --- Guardar el video en el navegador (US3) --- */}
@@ -190,6 +140,73 @@ export default function SettingsScreen() {
         </section>
       </div>
     </div>
+  )
+}
+
+/**
+ * Campo de API key reutilizable, ligado a un proveedor por su `id`. La traducción y la
+ * transcripción comparten el almacén de claves por `id` (Groq/OpenAI sirven a ambos), así
+ * que reusarlo aquí garantiza que el ASR tenga DÓNDE pegar su clave aunque el proveedor de
+ * traducción sea otro. La clave vive solo en localStorage (D6, FR-004).
+ */
+function ApiKeyField({ providerId, label }: { providerId: ProviderId; label: string }) {
+  const savedKey = useSettingsStore((s) => s.keys[providerId])
+  const setKey = useSettingsStore((s) => s.setKey)
+  const clearKey = useSettingsStore((s) => s.clearKey)
+  // Borrador local del input; se confirma con "Guardar".
+  const [draft, setDraft] = useState('')
+
+  const onSave = () => {
+    if (draft.trim() === '') return
+    setKey(providerId, draft.trim())
+    setDraft('')
+  }
+  const onClear = () => {
+    clearKey(providerId)
+    setDraft('')
+  }
+
+  return (
+    <>
+      <label htmlFor={`apikey-${providerId}`} className="text-xs font-medium text-neutral-400">
+        API key de {label}
+      </label>
+      <input
+        id={`apikey-${providerId}`}
+        type="password"
+        autoComplete="off"
+        spellCheck={false}
+        placeholder={savedKey ? '•••••••• (guardada)' : 'Pega tu clave'}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600"
+      />
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={draft.trim() === ''}
+          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white active:bg-sky-700 disabled:bg-neutral-800 disabled:text-neutral-600"
+        >
+          Guardar
+        </button>
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={!savedKey}
+          className="rounded-lg px-4 py-2 text-sm font-medium text-rose-400 active:bg-neutral-800 disabled:text-neutral-700"
+        >
+          Borrar
+        </button>
+        <span className="ml-auto text-xs text-neutral-500">
+          {savedKey ? 'Clave guardada ✓' : 'Sin clave'}
+        </span>
+      </div>
+      <p className="text-xs text-neutral-500">
+        La clave se guarda solo en este dispositivo (localStorage). Nunca se envía a otro
+        sitio salvo a {label}.
+      </p>
+    </>
   )
 }
 
